@@ -886,14 +886,14 @@ const AnakAddForm: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="max-h-screen flex flex-col">
+      <div className="flex justify-between items-center mb-6">
         <Button variant="secondary" size="sm" onClick={() => navigate(-1)}>
           Kembali
         </Button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-8 pb-8 pr-2">
         {/* Data Anak */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 space-y-6 mb-8">
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6">Data Anak</h2>

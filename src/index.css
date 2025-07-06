@@ -7,6 +7,25 @@ body, html, #root {
   font-family: 'Quicksand', sans-serif;
 }
 
+/* Custom scrollbar untuk form */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
 /* Improved custom style for react-tag-input tags */
 .ReactTags__tags {
   display: flex;

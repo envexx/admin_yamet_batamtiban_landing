@@ -15,7 +15,6 @@ const ProfileSettings: React.FC = () => {
     name: '',
     email: '',
     phone: '',
-    address: '',
   });
 
   useEffect(() => {
@@ -24,7 +23,6 @@ const ProfileSettings: React.FC = () => {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        address: user.address || '',
       });
     }
   }, [user]);
@@ -92,12 +90,6 @@ const ProfileSettings: React.FC = () => {
               <div className="flex items-center space-x-3 text-sm">
                 <Phone className="w-4 h-4 text-gray-400" />
                 <span className="text-gray-600">{user.phone}</span>
-              </div>
-            )}
-            {user.address && (
-              <div className="flex items-center space-x-3 text-sm">
-                <MapPin className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-600">{user.address}</span>
               </div>
             )}
           </div>
@@ -168,21 +160,6 @@ const ProfileSettings: React.FC = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Alamat */}
-            <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                Alamat
-              </label>
-              <textarea
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
