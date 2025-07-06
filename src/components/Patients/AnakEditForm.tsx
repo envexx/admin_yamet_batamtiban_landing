@@ -6,6 +6,7 @@ import Button from '../UI/Button';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import { useModalAlert } from '../UI/ModalAlertContext';
 import { ChevronDown, ChevronUp, Save, ArrowLeft, Upload, X, Check, Clock, User, Users, FileText, Heart, Baby, Shield, ClipboardList, GraduationCap, Stethoscope, Activity, Paperclip } from 'lucide-react';
+import { WithContext as ReactTagInput, Tag } from 'react-tag-input';
 
 // Fungsi untuk memastikan value input date selalu yyyy-MM-dd
 function toDateInputValue(dateStr: string | null | undefined): string {
@@ -792,6 +793,15 @@ const AnakEditForm: React.FC = () => {
     }
   }, [anakData.nomor_anak]);
 
+  useEffect(() => {
+    // ... existing code ...
+    // Mapping jenis_kelamin jika value dari backend adalah 'LAKI_LAKI' atau 'PEREMPUAN'
+    setAnakData(prev => ({
+      ...prev,
+      jenis_kelamin: prev.jenis_kelamin === 'LAKI_LAKI' ? 'laki_laki' : prev.jenis_kelamin === 'PEREMPUAN' ? 'perempuan' : prev.jenis_kelamin
+    }));
+  }, [/* dependencies sesuai useEffect aslinya */]);
+
   if (fetchLoading) {
     return <LoadingSpinner size="lg" text="Memuat data anak..." />;
   }
@@ -978,7 +988,17 @@ const AnakEditForm: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Pendidikan Terakhir</label>
-                    <input type="text" name="ayah.pendidikan_terakhir" value={anakData.ayah.pendidikan_terakhir} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
+                    <select name="ayah.pendidikan_terakhir" value={anakData.ayah.pendidikan_terakhir} onChange={handleChange} className="w-full px-2 py-1 border rounded">
+                      <option value="">Pilih Pendidikan</option>
+                      <option value="Tidak Sekolah">Tidak Sekolah</option>
+                      <option value="SD">SD</option>
+                      <option value="SMP">SMP</option>
+                      <option value="SMA/SMK">SMA/SMK</option>
+                      <option value="D1/D2/D3">D1/D2/D3</option>
+                      <option value="S1">S1</option>
+                      <option value="S2">S2</option>
+                      <option value="S3">S3</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Pekerjaan Saat Ini</label>
@@ -1047,7 +1067,17 @@ const AnakEditForm: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Pendidikan Terakhir</label>
-                    <input type="text" name="ibu.pendidikan_terakhir" value={anakData.ibu.pendidikan_terakhir} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
+                    <select name="ibu.pendidikan_terakhir" value={anakData.ibu.pendidikan_terakhir} onChange={handleChange} className="w-full px-2 py-1 border rounded">
+                      <option value="">Pilih Pendidikan</option>
+                      <option value="Tidak Sekolah">Tidak Sekolah</option>
+                      <option value="SD">SD</option>
+                      <option value="SMP">SMP</option>
+                      <option value="SMA/SMK">SMA/SMK</option>
+                      <option value="D1/D2/D3">D1/D2/D3</option>
+                      <option value="S1">S1</option>
+                      <option value="S2">S2</option>
+                      <option value="S3">S3</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Pekerjaan Saat Ini</label>
@@ -1648,6 +1678,61 @@ const AnakEditForm: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nilai Rata-rata Sekolah</label>
                 <input type="text" name="riwayat_pendidikan.nilai_rata_rata_sekolah" value={anakData.riwayat_pendidikan.nilai_rata_rata_sekolah} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nilai Tertinggi (Mapel)</label>
+                <input type="text" name="riwayat_pendidikan.nilai_tertinggi_mapel" value={anakData.riwayat_pendidikan.nilai_tertinggi_mapel} onChange={handleChange} className="w-full px-2 py-1 border rounded" placeholder="Contoh: Matematika" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nilai Tertinggi (Nilai)</label>
+                <input type="text" name="riwayat_pendidikan.nilai_tertinggi_nilai" value={anakData.riwayat_pendidikan.nilai_tertinggi_nilai} onChange={handleChange} className="w-full px-2 py-1 border rounded" placeholder="Contoh: 95" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nilai Terendah (Mapel)</label>
+                <input type="text" name="riwayat_pendidikan.nilai_terendah_mapel" value={anakData.riwayat_pendidikan.nilai_terendah_mapel} onChange={handleChange} className="w-full px-2 py-1 border rounded" placeholder="Contoh: Bahasa Indonesia" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nilai Terendah (Nilai)</label>
+                <input type="text" name="riwayat_pendidikan.nilai_terendah_nilai" value={anakData.riwayat_pendidikan.nilai_terendah_nilai} onChange={handleChange} className="w-full px-2 py-1 border rounded" placeholder="Contoh: 70" />
+              </div>
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-medium text-gray-700">Keluhan Guru</label>
+                <div className="w-full">
+                  <ReactTagInput
+                    tags={(anakData.riwayat_pendidikan.keluhan_guru || []).map((t: string, i: number) => ({ id: String(i), text: t, className: '' }))}
+                    handleDelete={(i: number) => {
+                      const newArr = [...(anakData.riwayat_pendidikan.keluhan_guru || [])];
+                      newArr.splice(i, 1);
+                      setAnakData(prev => ({
+                        ...prev,
+                        riwayat_pendidikan: {
+                          ...prev.riwayat_pendidikan,
+                          keluhan_guru: newArr
+                        }
+                      }));
+                    }}
+                    handleAddition={(tag: Tag) => {
+                      const newArr = [...(anakData.riwayat_pendidikan.keluhan_guru || []), tag.text || tag.id];
+                      setAnakData(prev => ({
+                        ...prev,
+                        riwayat_pendidikan: {
+                          ...prev.riwayat_pendidikan,
+                          keluhan_guru: newArr
+                        }
+                      }));
+                    }}
+                    placeholder="Tambah keluhan guru dan tekan Enter"
+                    inputFieldPosition="inline"
+                    allowDragDrop={false}
+                    classNames={{
+                      tags: 'react-tagsinput-tags',
+                      tagInput: 'react-tagsinput-input',
+                      tagInputField: 'react-tagsinput-input-field w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base',
+                      tag: 'react-tagsinput-tag bg-purple-100 text-purple-800 px-2 py-1 rounded-md text-sm mr-2 mb-2 inline-flex items-center',
+                      remove: 'react-tagsinput-remove ml-1 text-purple-600 hover:text-purple-800 cursor-pointer'
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}

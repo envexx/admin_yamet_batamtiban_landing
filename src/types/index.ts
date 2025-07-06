@@ -392,7 +392,7 @@ export interface Ayah {
 export interface Ibu {
   id: number;
   anak_id_ayah: number | null;
-  anak_id_ibu: number;
+  anak_id_ibu: number | null;
   nama: string;
   tempat_lahir: string;
   tanggal_lahir: string;
@@ -674,6 +674,7 @@ export interface Lampiran {
 }
 
 export interface AnakDetail {
+  [key: string]: any;
   id: number;
   nomor_anak: string;
   full_name: string;

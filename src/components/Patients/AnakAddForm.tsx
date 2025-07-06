@@ -1127,87 +1127,17 @@ const AnakAddForm: React.FC = () => {
                 </div>
                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                   <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Pendidikan Terakhir</label>
-                  <input type="text" name="ayah.pendidikan_terakhir" value={anakData.ayah.pendidikan_terakhir} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
-                </div>
-                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                  <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Pekerjaan Saat Ini</label>
-                  <input type="text" name="ayah.pekerjaan_saat_ini" value={anakData.ayah.pekerjaan_saat_ini} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
-                </div>
-                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                  <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Telepon</label>
-                  <input type="text" name="ayah.telepon" value={anakData.ayah.telepon} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
-                </div>
-                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                  <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Email</label>
-                  <input type="email" name="ayah.email" value={anakData.ayah.email} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
-                </div>
-              </div>
-            </div>
-            {/* Ibu */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4 border border-gray-200">
-              <h3 className="font-semibold text-lg text-gray-700 mb-2">Ibu</h3>
-              <div className="space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                  <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Nama Lengkap</label>
-                  <input type="text" name="ibu.nama" value={anakData.ibu.nama} onChange={handleChange} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base" placeholder="Masukkan nama ibu..." />
-                </div>
-                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                  <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Tempat Lahir</label>
-                  <input type="text" name="ibu.tempat_lahir" value={anakData.ibu.tempat_lahir} onChange={handleChange} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base" placeholder="Masukkan tempat lahir ibu..." />
-                </div>
-                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                  <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Tanggal Lahir</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <select
-                      value={ibuDateComponents.day}
-                      onChange={(e) => handleIbuDateComponentChange('day', e.target.value)}
-                      className="w-full px-2 py-1 border rounded"
-                    >
-                      <option value="">Tanggal</option>
-                      {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                        <option key={day} value={String(day).padStart(2, '0')}>
-                          {day}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={ibuDateComponents.month}
-                      onChange={(e) => handleIbuDateComponentChange('month', e.target.value)}
-                      className="w-full px-2 py-1 border rounded"
-                    >
-                      <option value="">Bulan</option>
-                      {[
-                        { value: '01', label: 'Januari' },
-                        { value: '02', label: 'Februari' },
-                        { value: '03', label: 'Maret' },
-                        { value: '04', label: 'April' },
-                        { value: '05', label: 'Mei' },
-                        { value: '06', label: 'Juni' },
-                        { value: '07', label: 'Juli' },
-                        { value: '08', label: 'Agustus' },
-                        { value: '09', label: 'September' },
-                        { value: '10', label: 'Oktober' },
-                        { value: '11', label: 'November' },
-                        { value: '12', label: 'Desember' }
-                      ].map(month => (
-                        <option key={month.value} value={month.value}>
-                          {month.label}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={ibuDateComponents.year}
-                      onChange={(e) => handleIbuDateComponentChange('year', e.target.value)}
-                      className="w-full px-2 py-1 border rounded"
-                    >
-                      <option value="">Tahun</option>
-                      {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                        <option key={year} value={String(year)}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <select name="ayah.pendidikan_terakhir" value={anakData.ayah.pendidikan_terakhir} onChange={handleChange} className="w-full px-2 py-1 border rounded">
+                    <option value="">Pilih Pendidikan</option>
+                    <option value="Tidak Sekolah">Tidak Sekolah</option>
+                    <option value="SD">SD</option>
+                    <option value="SMP">SMP</option>
+                    <option value="SMA/SMK">SMA/SMK</option>
+                    <option value="D1/D2/D3">D1/D2/D3</option>
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="S3">S3</option>
+                  </select>
                 </div>
                 <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                   <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Usia</label>
