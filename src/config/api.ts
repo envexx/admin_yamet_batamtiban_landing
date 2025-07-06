@@ -1,7 +1,7 @@
 // API Configuration for different environments
 export const API_CONFIG = {
   // Production API URL
-  PRODUCTION_API_URL: 'https://api.yametbatamtiban.id',
+  PRODUCTION_API_URL: 'https://api.yametbatamtiban.id/api/',
   
   // Development API URL (proxy to local backend)
   DEVELOPMENT_API_URL: '/api',
