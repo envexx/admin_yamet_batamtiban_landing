@@ -96,7 +96,7 @@ export const authAPI = {
   },
   
   // Update Profile (Self)
-  updateProfile: async (profileData: Partial<UserForm>): Promise<ApiResponse<User>> => {
+  updateProfile: async (profileData: Partial<UserForm>): Promise<ApiResponse<{user: User}>> => {
     const response = await api.put('/auth/update', profileData);
     return response.data;
   },

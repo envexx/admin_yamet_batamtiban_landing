@@ -57,7 +57,7 @@ const ProfileSettings: React.FC = () => {
       
       if (response.status === 'success' && response.data) {
         // Pastikan kita mengirim data user yang benar ke updateUser
-        const updatedUserData = response.data;
+        const updatedUserData = response.data.user;
         console.log('Updated user data:', updatedUserData); // Debug log
         
         updateUser(updatedUserData);
