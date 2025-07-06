@@ -93,10 +93,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = (userData: Partial<User>) => {
+    console.log('Updating user with data:', userData); // Debug log
     if (user) {
       const updatedUser = { ...user, ...userData };
+      console.log('Updated user object:', updatedUser); // Debug log
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+    } else {
+      console.warn('No user found when trying to update'); // Debug log
     }
   };
 

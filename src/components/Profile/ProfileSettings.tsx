@@ -19,6 +19,7 @@ const ProfileSettings: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('Updating form data with user:', user); // Debug log
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -42,14 +43,32 @@ const ProfileSettings: React.FC = () => {
     setSuccess(null);
 
     try {
-      const response = await authAPI.updateProfile(formData);
+      // Bersihkan data sebelum dikirim - ubah string kosong menjadi null jika perlu
+      const cleanFormData = {
+        name: formData.name.trim() || undefined,
+        email: formData.email.trim() || undefined,
+        phone: formData.phone.trim() || undefined,
+      };
+
+      console.log('Sending form data:', cleanFormData); // Debug log
+      
+      const response = await authAPI.updateProfile(cleanFormData);
+      console.log('Update profile response:', response); // Debug log
+      
       if (response.status === 'success' && response.data) {
-        updateUser(response.data);
-        setSuccess('Profile updated successfully');
+        // Pastikan kita mengirim data user yang benar ke updateUser
+        const updatedUserData = response.data;
+        console.log('Updated user data:', updatedUserData); // Debug log
+        
+        updateUser(updatedUserData);
+        setSuccess('Profile berhasil diperbarui!');
         setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError('Gagal memperbarui profile');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to update profile');
+      console.error('Update profile error:', err); // Debug log
+      setError(err.response?.data?.message || err.message || 'Gagal memperbarui profile');
     } finally {
       setLoading(false);
     }
