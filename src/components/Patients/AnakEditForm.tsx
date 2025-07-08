@@ -1369,16 +1369,26 @@ const AnakAddForm: React.FC = () => {
     }
   }, [id]);
 
-  useEffect(() => {
-    // Update komponen tanggal
-    setBirthDateComponents(parseDateComponents(anakData.birth_date));
-    setAyahDateComponents(parseDateComponents(anakData.ayah.tanggal_lahir));
-    setIbuDateComponents(parseDateComponents(anakData.ibu.tanggal_lahir));
-    setPemeriksaanDateComponents(parseDateComponents(anakData.tanggal_pemeriksaan));
-    setMulaiTerapiDateComponents(parseDateComponents(anakData.mulai_terapi));
-    setSelesaiTerapiDateComponents(parseDateComponents(anakData.selesai_terapi));
-    setMulaiCutiDateComponents(parseDateComponents(anakData.mulai_cuti));
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
+  useEffect(() => {
+    if (isFirstLoad && anakData && anakData.id) {
+      setBirthDateComponents(parseDateComponents(anakData.birth_date));
+      setAyahDateComponents(parseDateComponents(anakData.ayah.tanggal_lahir));
+      setIbuDateComponents(parseDateComponents(anakData.ibu.tanggal_lahir));
+      setPemeriksaanDateComponents(parseDateComponents(anakData.tanggal_pemeriksaan));
+      setMulaiTerapiDateComponents(parseDateComponents(anakData.mulai_terapi));
+      setSelesaiTerapiDateComponents(parseDateComponents(anakData.selesai_terapi));
+      setMulaiCutiDateComponents(parseDateComponents(anakData.mulai_cuti));
+      // Tag/tag array
+      setKeluhanOrtuTags((anakData.survey_awal.keluhan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+      setTindakanOrtuTags((anakData.survey_awal.tindakan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+      setKendalaTags((anakData.survey_awal.kendala || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+      setIsFirstLoad(false);
+    }
+  }, [anakData, isFirstLoad]);
+
+  useEffect(() => {
     // Update tag input
     setKeluhanOrtuTags((anakData.survey_awal.keluhan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
     setTindakanOrtuTags((anakData.survey_awal.tindakan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
@@ -1427,7 +1437,6 @@ const AnakAddForm: React.FC = () => {
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit} className="space-y-8 pb-8 pr-2">
-          {/* Tab 1: Data Anak, Data Orang Tua, Survey Awal */}
           {activeTab === 0 && (
             <>
               {/* Data Anak */}
@@ -1912,7 +1921,6 @@ const AnakAddForm: React.FC = () => {
               </div>
             </>
           )}
-          {/* Tab 2: Riwayat Kehamilan, Riwayat Kelahiran */}
           {activeTab === 1 && (
             <>
               {/* Riwayat Kehamilan */}
@@ -2154,7 +2162,6 @@ const AnakAddForm: React.FC = () => {
               </div>
             </>
           )}
-          {/* Tab 3: Imunisasi, Setelah Lahir, Perkembangan Anak, Perilaku Oral Motor, Perkembangan Sosial */}
           {activeTab === 2 && (
             <>
               {/* Imunisasi */}
@@ -2596,7 +2603,6 @@ const AnakAddForm: React.FC = () => {
               </div>
             </>
           )}
-          {/* Tab 4: Pola Makan, Pola Tidur, Penyakit Diderita, Hubungan Keluarga, Pendidikan, Lampiran */}
           {activeTab === 3 && (
             <>
               {/* Pola Makan */}
@@ -2944,14 +2950,14 @@ const AnakAddForm: React.FC = () => {
                   </div>
                 </div>
               </div>
-              {/* Submit Button */}
-              <div className="flex justify-end">
-                <Button type="submit" variant="primary" size="lg">
-                  Simpan Data Anak
-                </Button>
-              </div>
             </>
           )}
+          {/* Tombol submit di luar blok tab */}
+          <div className="flex justify-end">
+            <Button type="submit" variant="primary" size="lg">
+              Simpan Data Anak
+            </Button>
+          </div>
         </form>
       </div>
     </div>
