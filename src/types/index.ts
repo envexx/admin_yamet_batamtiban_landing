@@ -815,6 +815,7 @@ export interface ProgramTerapi {
     id: number;
     name: string;
   };
+  jam_per_minggu: number | null;
 }
 
 export interface ProgramTerapiForm {
@@ -823,6 +824,7 @@ export interface ProgramTerapiForm {
   start_date?: string;
   end_date?: string;
   status?: 'AKTIF' | 'SELESAI' | 'DIBATALKAN';
+  jam_per_minggu: number | null;
 }
 
 // Dashboard Types
@@ -914,6 +916,7 @@ export interface CreateProgramTerapiData {
   start_date?: string;
   end_date?: string;
   status?: 'AKTIF' | 'SELESAI' | 'DIBATALKAN';
+  jam_per_minggu: number | null;
 }
 
 export interface UpdateProgramTerapiData {
@@ -922,4 +925,5 @@ export interface UpdateProgramTerapiData {
   start_date?: string;
   end_date?: string;
   status?: 'AKTIF' | 'SELESAI' | 'DIBATALKAN';
+  jam_per_minggu?: number | null;
 }

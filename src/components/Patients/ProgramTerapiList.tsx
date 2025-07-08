@@ -25,14 +25,16 @@ const ProgramTerapiList: React.FC = () => {
     description: '',
     start_date: '',
     end_date: '',
-    status: 'AKTIF'
+    status: 'AKTIF',
+    jam_per_minggu: 0
   });
   const [editForm, setEditForm] = useState<UpdateProgramTerapiData>({
     program_name: '',
     description: '',
     start_date: '',
     end_date: '',
-    status: 'AKTIF'
+    status: 'AKTIF',
+    jam_per_minggu: 0
   });
 
   const fetchProgramTerapi = async () => {
@@ -85,7 +87,8 @@ const ProgramTerapiList: React.FC = () => {
       description: '',
       start_date: '',
       end_date: '',
-      status: 'AKTIF'
+      status: 'AKTIF',
+      jam_per_minggu: 0
     });
     setShowAddForm(true);
   };
@@ -97,7 +100,8 @@ const ProgramTerapiList: React.FC = () => {
       description: program.description || '',
       start_date: program.start_date ? program.start_date.split('T')[0] : '',
       end_date: program.end_date ? program.end_date.split('T')[0] : '',
-      status: program.status
+      status: program.status,
+      jam_per_minggu: program.jam_per_minggu || 0
     });
     setShowEditForm(true);
   };
@@ -106,7 +110,8 @@ const ProgramTerapiList: React.FC = () => {
     if (!selectedAnakId) return;
     
     try {
-      const response = await programTerapiAPI.create(selectedAnakId, addForm);
+      const payload = { ...addForm, jam_per_minggu: Number(addForm.jam_per_minggu) };
+      const response = await programTerapiAPI.create(selectedAnakId, payload);
       if (response.status === 'success') {
         setShowAddForm(false);
         setSelectedAnakId(null);
@@ -115,7 +120,8 @@ const ProgramTerapiList: React.FC = () => {
           description: '',
           start_date: '',
           end_date: '',
-          status: 'AKTIF'
+          status: 'AKTIF',
+          jam_per_minggu: 0
         });
         fetchProgramTerapi();
         alert('Program terapi berhasil dibuat');
@@ -129,7 +135,8 @@ const ProgramTerapiList: React.FC = () => {
     if (!selectedProgram) return;
     
     try {
-      const response = await programTerapiAPI.update(selectedProgram.anak_id, selectedProgram.id, editForm);
+      const payload = { ...editForm, jam_per_minggu: Number(editForm.jam_per_minggu) };
+      const response = await programTerapiAPI.update(selectedProgram.anak_id, selectedProgram.id, payload);
       if (response.status === 'success') {
         setShowEditForm(false);
         setSelectedProgram(null);
@@ -138,7 +145,8 @@ const ProgramTerapiList: React.FC = () => {
           description: '',
           start_date: '',
           end_date: '',
-          status: 'AKTIF'
+          status: 'AKTIF',
+          jam_per_minggu: 0
         });
         fetchProgramTerapi();
         alert('Program terapi berhasil diperbarui');
@@ -406,7 +414,8 @@ const ProgramTerapiList: React.FC = () => {
               description: '',
               start_date: '',
               end_date: '',
-              status: 'AKTIF'
+              status: 'AKTIF',
+              jam_per_minggu: 0
             });
           }} 
           title="Edit Program Terapi"
@@ -488,6 +497,20 @@ const ProgramTerapiList: React.FC = () => {
               </div>
             </div>
             
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Jumlah Jam/Minggu</label>
+                <input
+                  type="number"
+                  value={editForm.jam_per_minggu || ''}
+                  onChange={e => setEditForm(prev => ({ ...prev, jam_per_minggu: Number(e.target.value) }))}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Contoh: 3"
+                  min={0}
+                />
+              </div>
+            </div>
+            
             <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t border-gray-200">
               <Button
                 variant="danger"
@@ -515,7 +538,8 @@ const ProgramTerapiList: React.FC = () => {
                       description: '',
                       start_date: '',
                       end_date: '',
-                      status: 'AKTIF'
+                      status: 'AKTIF',
+                      jam_per_minggu: 0
                     });
                   }}
                   className="px-6 py-3 text-sm font-medium"
@@ -548,7 +572,8 @@ const ProgramTerapiList: React.FC = () => {
               description: '',
               start_date: '',
               end_date: '',
-              status: 'AKTIF'
+              status: 'AKTIF',
+              jam_per_minggu: 0
             });
           }} 
           title="Tambah Program Terapi Baru"
@@ -630,6 +655,20 @@ const ProgramTerapiList: React.FC = () => {
               </div>
             </div>
             
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Jumlah Jam/Minggu</label>
+                <input
+                  type="number"
+                  value={addForm.jam_per_minggu || ''}
+                  onChange={e => setAddForm(prev => ({ ...prev, jam_per_minggu: Number(e.target.value) }))}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Contoh: 3"
+                  min={0}
+                />
+              </div>
+            </div>
+            
             <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
               <Button
                 variant="secondary"
@@ -641,7 +680,8 @@ const ProgramTerapiList: React.FC = () => {
                     description: '',
                     start_date: '',
                     end_date: '',
-                    status: 'AKTIF'
+                    status: 'AKTIF',
+                    jam_per_minggu: 0
                   });
                 }}
                 className="px-6 py-3 text-sm font-medium"
