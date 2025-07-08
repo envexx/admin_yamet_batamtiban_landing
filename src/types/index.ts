@@ -387,6 +387,7 @@ export interface Ayah {
   email: string;
   tahun_meninggal: number | null;
   usia_saat_meninggal: number | null;
+  kewarganegaraan?: string | null;
 }
 
 export interface Ibu {
@@ -408,6 +409,7 @@ export interface Ibu {
   email: string;
   tahun_meninggal: number | null;
   usia_saat_meninggal: number | null;
+  kewarganegaraan?: string | null;
 }
 
 export interface SurveyAwal {
@@ -462,6 +464,8 @@ export interface RiwayatKelahiran {
   penolong_persalinan: string;
   tempat_bersalin: string;
   cerita_spesifik_kelahiran: string;
+  berat_badan_bayi: number | null;
+  panjang_badan_bayi: number | null;
 }
 
 export interface RiwayatImunisasi {
@@ -507,6 +511,7 @@ export interface RiwayatSetelahLahir {
   sakit_karena_virus: boolean;
   sakit_virus_usia_bulan: number | null;
   sakit_virus_jenis: string | null;
+  frekuensi_durasi_kejang_tanpa_panas: string | null;
 }
 
 export interface PerkembanganAnak {
@@ -556,6 +561,10 @@ export interface PerkembanganAnak {
   komunikasi_ekspresi_ibu_usia: string;
   ekspresi_emosi_ya: boolean;
   ekspresi_emosi_usia: string;
+  berjalan_tanpa_pegangan_ya: boolean;
+  berjalan_tanpa_pegangan_usia: string;
+  mengucapkan_1_kata_ya: boolean | null;
+  mengucapkan_1_kata_usia: string | null;
 }
 
 export interface PerilakuOralMotor {
