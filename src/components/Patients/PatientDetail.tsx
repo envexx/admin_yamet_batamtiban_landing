@@ -10,8 +10,12 @@ import { ArrowLeft, User, Users, FileText, Heart, Brain, Calendar, Download, Che
 import AssessmentList from './AssessmentList';
 import { Assessment, AssessmentForm } from '../../types';
 import Button from '../UI/Button';
+import { useAuth } from '../../contexts/AuthContext';
 
 type DetailModalType = 'kehamilan' | 'kelahiran' | 'imunisasi' | 'penyakit' | 'perkembangan' | 'oral' | 'sosial';
+
+type SurveyDataType = import('../../types').SurveyData;
+type RiwayatMedisDataType = import('../../types').RiwayatMedisData;
 
 const AnakDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,8 +31,8 @@ const AnakDetailPage: React.FC = () => {
   // Form states
   const [showSurveyForm, setShowSurveyForm] = useState(false);
   const [showRiwayatForm, setShowRiwayatForm] = useState(false);
-  const [editingSurvey, setEditingSurvey] = useState<unknown | null>(null);
-  const [editingRiwayat, setEditingRiwayat] = useState<unknown | null>(null);
+  const [editingSurvey, setEditingSurvey] = useState<SurveyDataType | null>(null);
+  const [editingRiwayat, setEditingRiwayat] = useState<RiwayatMedisDataType | null>(null);
   
   // Expanded sections state
   const [expandedSections, setExpandedSections] = useState<{
@@ -46,13 +50,13 @@ const AnakDetailPage: React.FC = () => {
     basicInfo: true,
     parents: true,
     survey: true,
-    medical: false,
-    development: false,
-    behavior: false,
-    documents: false,
-    pemeriksaanSebelumnya: false,
-    terapiSebelumnya: false,
-    riwayatPendidikan: false
+    medical: true,
+    development: true,
+    behavior: true,
+    documents: true,
+    pemeriksaanSebelumnya: true,
+    terapiSebelumnya: true,
+    riwayatPendidikan: true
   });
   
   const navigate = useNavigate();
@@ -89,8 +93,11 @@ const AnakDetailPage: React.FC = () => {
     description: '',
     start_date: '',
     end_date: '',
-    status: 'AKTIF' as 'AKTIF' | 'SELESAI' | 'DIBATALKAN'
+    status: 'AKTIF' as 'AKTIF' | 'SELESAI' | 'DIBATALKAN',
+    jam_per_minggu: null,
   });
+
+  const { user } = useAuth();
 
   // Ubah openDetailModal agar menerima group dan tab
   const openDetailModal = (group: 'medis' | 'perkembangan', tab: DetailModalType, title: string) => {
@@ -169,6 +176,13 @@ const AnakDetailPage: React.FC = () => {
     const d = new Date(dateString);
     if (isNaN(d.getTime())) return '-';
     return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function formatDateTime(dateString?: string) {
+    if (!dateString) return '-';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) + ', ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
   }
 
   // Fungsi ini di-comment karena tidak digunakan saat ini
@@ -350,7 +364,8 @@ const AnakDetailPage: React.FC = () => {
           description: '',
           start_date: '',
           end_date: '',
-          status: 'AKTIF'
+          status: 'AKTIF',
+          jam_per_minggu: null,
         });
         fetchProgramTerapi();
         alert('Program terapi berhasil dibuat');
@@ -374,7 +389,8 @@ const AnakDetailPage: React.FC = () => {
           description: '',
           start_date: '',
           end_date: '',
-          status: 'AKTIF'
+          status: 'AKTIF',
+          jam_per_minggu: null,
         });
         fetchProgramTerapi();
         alert('Program terapi berhasil diperbarui');
@@ -411,7 +427,8 @@ const AnakDetailPage: React.FC = () => {
       description: program.description || '',
       start_date: program.start_date ? program.start_date.split('T')[0] : '',
       end_date: program.end_date ? program.end_date.split('T')[0] : '',
-      status: program.status
+      status: program.status,
+      jam_per_minggu: program.jam_per_minggu,
     });
     setShowProgramTerapiForm(true);
   };
@@ -622,9 +639,9 @@ const AnakDetailPage: React.FC = () => {
               <DataField label="Tanggal Lahir" value={formatDate(anak.birth_date || undefined)} />
               <DataField label="Tempat Lahir" value={anak.birth_place} />
               <DataField label="Jenis Kelamin" value={
-                anak.jenis_kelamin === 'LAKI_LAKI' || anak.jenis_kelamin === 'laki_laki'
+                anak.jenis_kelamin?.toLowerCase() === 'laki_laki'
                   ? 'Laki-laki'
-                  : anak.jenis_kelamin === 'PEREMPUAN' || anak.jenis_kelamin === 'perempuan'
+                  : anak.jenis_kelamin?.toLowerCase() === 'perempuan'
                   ? 'Perempuan'
                   : '-'
               } />
@@ -636,9 +653,13 @@ const AnakDetailPage: React.FC = () => {
               <DataField label="Mulai Terapi" value={formatDate(anak.mulai_terapi || undefined)} />
               <DataField label="Selesai Terapi" value={formatDate(anak.selesai_terapi || undefined)} />
               <DataField label="Mulai Cuti" value={formatDate(anak.mulai_cuti || undefined)} />
-              <DataField label="Dibuat Oleh" value={anak.user_created?.name} />
-              <DataField label="Dibuat Pada" value={formatDate(anak.created_at || undefined)} />
-              <DataField label="Diupdate Pada" value={formatDate(anak.updated_at || undefined)} />
+              {(user?.peran === 'MANAJER' || user?.peran === 'SUPERADMIN') && (
+                <>
+                  <DataField label="Dibuat Oleh" value={anak.user_created?.name} />
+                  <DataField label="Dibuat Pada" value={formatDateTime(anak.created_at || undefined)} />
+                  <DataField label="Terakhir Diupdate" value={formatDateTime(anak.updated_at || undefined)} />
+                </>
+              )}
             </div>
           </InfoCard>
 
@@ -668,7 +689,6 @@ const AnakDetailPage: React.FC = () => {
                   <DataField label="Alamat" value={anak.ayah?.alamat_rumah} />
                 </div>
               </div>
-
               {/* Data Ibu */}
               <div className="bg-pink-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-pink-900 mb-4 flex items-center">
@@ -703,7 +723,6 @@ const AnakDetailPage: React.FC = () => {
                 <DataField label="Penjelasan Mekanisme" value={anak.survey_awal?.penjelasan_mekanisme} type="boolean" />
                 <DataField label="Bersedia Online" value={anak.survey_awal?.bersedia_online} type="boolean" />
               </div>
-              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-red-50 rounded-lg p-4">
                   <h4 className="font-semibold text-red-900 mb-3">Keluhan Orang Tua</h4>
@@ -715,7 +734,6 @@ const AnakDetailPage: React.FC = () => {
                     )) || <span className="text-gray-500">Tidak ada keluhan</span>}
                   </div>
                 </div>
-                
                 <div className="bg-yellow-50 rounded-lg p-4">
                   <h4 className="font-semibold text-yellow-900 mb-3">Tindakan Orang Tua</h4>
                   <div className="space-y-2">
@@ -726,7 +744,6 @@ const AnakDetailPage: React.FC = () => {
                     )) || <span className="text-gray-500">Tidak ada tindakan</span>}
                   </div>
                 </div>
-                
                 <div className="bg-orange-50 rounded-lg p-4">
                   <h4 className="font-semibold text-orange-900 mb-3">Kendala</h4>
                   <div className="space-y-2">
@@ -741,240 +758,33 @@ const AnakDetailPage: React.FC = () => {
             </div>
           </InfoCard>
 
-          {/* Program Terapi */}
-          <InfoCard
-            icon={Stethoscope}
-            title="Program Terapi"
-            sectionKey="terapiSebelumnya"
-          >
-            <div className="mb-4 flex justify-between items-center">
-              <span className="text-gray-700 font-medium">Daftar Program Terapi Anak</span>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setEditingProgramTerapi(null);
-                  setShowProgramTerapiForm(true);
-                  setProgramTerapiForm({
-                    program_name: '',
-                    description: '',
-                    start_date: '',
-                    end_date: '',
-                    status: 'AKTIF'
-                  });
-                }}
-                className="!bg-white !text-purple-600 hover:!bg-purple-50 px-4 py-2 text-sm font-medium shadow-none border border-gray-200"
-              >
-                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Tambah Program
-              </Button>
-            </div>
-            {programTerapiLoading ? (
-              <div className="py-8 text-center">
-                <LoadingSpinner size="md" text="Memuat program terapi..." />
-              </div>
-            ) : programTerapi.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">Belum ada program terapi</div>
-            ) : (
-              <div className="space-y-4">
-                {programTerapi.map((program) => (
-                  <div
-                    key={program.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 hover:shadow-sm transition-all duration-200 cursor-pointer group"
-                    onClick={() => handleEditProgramTerapi(program)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
-                        {program.program_name}
-                      </h4>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${program.status === 'AKTIF' ? 'bg-green-100 text-green-800' : program.status === 'SELESAI' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>
-                        {program.status}
-                      </span>
-                    </div>
-                    <div className="text-gray-600 text-sm mb-2 line-clamp-2">{program.description}</div>
-                    <div className="flex items-center text-gray-500 text-xs mb-1">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {new Date(program.start_date).toLocaleDateString('id-ID')} - {new Date(program.end_date).toLocaleDateString('id-ID')}
-                    </div>
-                    {program.user_created && (
-                      <div className="flex items-center text-gray-500 text-xs mt-1">
-                        <User className="h-3 w-3 mr-1" />
-                        Oleh: {program.user_created.name}
-                      </div>
-                    )}
-                    <div className="flex gap-2 mt-2">
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteProgramTerapi(program.id);
-                        }}
-                        className="!px-2 !py-1 text-xs"
-                      >
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Modal Tambah/Edit Program Terapi */}
-            <Modal
-              isOpen={showProgramTerapiForm}
-              onClose={() => {
-                setShowProgramTerapiForm(false);
-                setEditingProgramTerapi(null);
-                setProgramTerapiForm({
-                  program_name: '',
-                  description: '',
-                  start_date: '',
-                  end_date: '',
-                  status: 'AKTIF'
-                });
-              }}
-              title={editingProgramTerapi ? 'Edit Program Terapi' : 'Tambah Program Terapi'}
-              size="lg"
-            >
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nama Program *
-                    </label>
-                    <select
-                      value={programTerapiForm.program_name}
-                      onChange={e => setProgramTerapiForm(prev => ({ ...prev, program_name: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                      required
-                    >
-                      <option value="">Pilih jenis program terapi</option>
-                      <option value="BT">BT - Behavioral Therapy</option>
-                      <option value="OT">OT - Occupational Therapy</option>
-                      <option value="TW">TW - Terapi Wicara</option>
-                      <option value="SI">SI - Sensory Integration</option>
-                      <option value="CBT">CBT - Cognitive Behavioral Therapy</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Status
-                    </label>
-                    <select
-                      value={programTerapiForm.status}
-                      onChange={e => setProgramTerapiForm(prev => ({ ...prev, status: e.target.value as any }))}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                    >
-                      <option value="AKTIF">AKTIF</option>
-                      <option value="SELESAI">SELESAI</option>
-                      <option value="DIBATALKAN">DIBATALKAN</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Deskripsi
-                  </label>
-                  <textarea
-                    value={programTerapiForm.description}
-                    onChange={e => setProgramTerapiForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Deskripsi program terapi..."
-                    rows={3}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Tanggal Mulai
-                    </label>
-                    <input
-                      type="date"
-                      value={programTerapiForm.start_date}
-                      onChange={e => setProgramTerapiForm(prev => ({ ...prev, start_date: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Tanggal Selesai
-                    </label>
-                    <input
-                      type="date"
-                      value={programTerapiForm.end_date}
-                      onChange={e => setProgramTerapiForm(prev => ({ ...prev, end_date: e.target.value }))}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      setShowProgramTerapiForm(false);
-                      setEditingProgramTerapi(null);
-                      setProgramTerapiForm({
-                        program_name: '',
-                        description: '',
-                        start_date: '',
-                        end_date: '',
-                        status: 'AKTIF'
-                      });
-                    }}
-                    className="px-6 py-3 text-sm font-medium"
-                  >
-                    Batal
-                  </Button>
-                  <Button
-                    onClick={editingProgramTerapi ? handleUpdateProgramTerapi : handleCreateProgramTerapi}
-                    disabled={!programTerapiForm.program_name}
-                    className="px-6 py-3 text-sm font-medium"
-                  >
-                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {editingProgramTerapi ? 'Update Program' : 'Buat Program'}
-                  </Button>
-                </div>
-              </div>
-            </Modal>
-          </InfoCard>
-
           {/* Riwayat Medis */}
           <InfoCard
             icon={Heart}
             title="Riwayat Medis"
             sectionKey="medical"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-green-50 rounded-lg p-4 text-center">
+            <div className="flex flex-wrap gap-4">
+              <div className="bg-green-50 rounded-lg p-4 flex-1 min-w-[250px]">
                 <h4 className="font-semibold text-green-900 mb-2">Riwayat Kehamilan</h4>
-                <p className="text-sm text-green-700">Data lengkap tersedia</p>
                 <button className="mt-2 text-green-600 hover:text-green-800 text-sm font-medium" onClick={() => openDetailModal('medis', 'kehamilan', 'Riwayat Kehamilan')}>
                   Lihat Detail →
                 </button>
               </div>
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
+              <div className="bg-blue-50 rounded-lg p-4 flex-1 min-w-[250px]">
                 <h4 className="font-semibold text-blue-900 mb-2">Riwayat Kelahiran</h4>
-                <p className="text-sm text-blue-700">Data lengkap tersedia</p>
                 <button className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium" onClick={() => openDetailModal('medis', 'kelahiran', 'Riwayat Kelahiran')}>
                   Lihat Detail →
                 </button>
               </div>
-              <div className="bg-purple-50 rounded-lg p-4 text-center">
+              <div className="bg-purple-50 rounded-lg p-4 flex-1 min-w-[250px]">
                 <h4 className="font-semibold text-purple-900 mb-2">Riwayat Imunisasi</h4>
-                <p className="text-sm text-purple-700">Data lengkap tersedia</p>
                 <button className="mt-2 text-purple-600 hover:text-purple-800 text-sm font-medium" onClick={() => openDetailModal('medis', 'imunisasi', 'Riwayat Imunisasi')}>
                   Lihat Detail →
                 </button>
               </div>
-              <div className="bg-orange-50 rounded-lg p-4 text-center">
+              <div className="bg-orange-50 rounded-lg p-4 flex-1 min-w-[250px]">
                 <h4 className="font-semibold text-orange-900 mb-2">Penyakit Diderita</h4>
-                <p className="text-sm text-orange-700">Data lengkap tersedia</p>
                 <button className="mt-2 text-orange-600 hover:text-orange-800 text-sm font-medium" onClick={() => openDetailModal('medis', 'penyakit', 'Penyakit Diderita')}>
                   Lihat Detail →
                 </button>
@@ -982,30 +792,27 @@ const AnakDetailPage: React.FC = () => {
             </div>
           </InfoCard>
 
-          {/* Perkembangan */}
+          {/* Perkembangan & Perilaku */}
           <InfoCard
             icon={Brain}
             title="Perkembangan & Perilaku"
             sectionKey="development"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-indigo-50 rounded-lg p-4 text-center">
+            <div className="flex flex-wrap gap-4">
+              <div className="bg-indigo-50 rounded-lg p-4 flex-1 min-w-[250px]">
                 <h4 className="font-semibold text-indigo-900 mb-2">Perkembangan Anak</h4>
-                <p className="text-sm text-indigo-700">Milestone perkembangan</p>
                 <button className="mt-2 text-indigo-600 hover:text-indigo-800 text-sm font-medium" onClick={() => openDetailModal('perkembangan', 'perkembangan', 'Perkembangan Anak')}>
                   Lihat Detail →
                 </button>
               </div>
-              <div className="bg-teal-50 rounded-lg p-4 text-center">
+              <div className="bg-teal-50 rounded-lg p-4 flex-1 min-w-[250px]">
                 <h4 className="font-semibold text-teal-900 mb-2">Perilaku Oral Motor</h4>
-                <p className="text-sm text-teal-700">Kemampuan makan & minum</p>
                 <button className="mt-2 text-teal-600 hover:text-teal-800 text-sm font-medium" onClick={() => openDetailModal('perkembangan', 'oral', 'Perilaku Oral Motor')}>
                   Lihat Detail →
                 </button>
               </div>
-              <div className="bg-rose-50 rounded-lg p-4 text-center">
+              <div className="bg-rose-50 rounded-lg p-4 flex-1 min-w-[250px]">
                 <h4 className="font-semibold text-rose-900 mb-2">Perkembangan Sosial</h4>
-                <p className="text-sm text-rose-700">Interaksi sosial</p>
                 <button className="mt-2 text-rose-600 hover:text-rose-800 text-sm font-medium" onClick={() => openDetailModal('perkembangan', 'sosial', 'Perkembangan Sosial')}>
                   Lihat Detail →
                 </button>
@@ -1015,7 +822,7 @@ const AnakDetailPage: React.FC = () => {
 
           {/* Riwayat Pendidikan */}
           <InfoCard
-            icon={FileText}
+            icon={ClipboardList}
             title="Riwayat Pendidikan"
             sectionKey="riwayatPendidikan"
           >
@@ -1047,53 +854,84 @@ const AnakDetailPage: React.FC = () => {
             </div>
           </InfoCard>
 
-          {/* Dokumen & Lampiran */}
+          {/* Program Terapi - tampilkan dalam tabel, hanya view */}
+          <InfoCard
+            icon={Stethoscope}
+            title="Program Terapi"
+            sectionKey="terapiSebelumnya"
+          >
+            {programTerapiLoading ? (
+              <LoadingSpinner size="md" text="Memuat program terapi..." />
+            ) : programTerapi.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">Belum ada program terapi</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama Program</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Deskripsi</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Mulai</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Selesai</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Jam/Minggu</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {programTerapi.map((program) => (
+                      <tr key={program.id}>
+                        <td className="px-4 py-2 whitespace-nowrap">{program.program_name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{program.description || '-'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{program.start_date ? new Date(program.start_date).toLocaleDateString('id-ID') : '-'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{program.end_date ? new Date(program.end_date).toLocaleDateString('id-ID') : '-'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{program.jam_per_minggu ?? '-'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{program.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </InfoCard>
+
+          {/* Assessment List - tampilkan dalam tabel, hanya view */}
           <InfoCard
             icon={FileText}
-            title="Dokumen & Lampiran"
-            sectionKey="documents"
+            title="Assessment"
+            sectionKey="survey"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[
-                { name: 'Hasil EEG', available: !!anak.lampiran?.hasil_eeg_url, url: anak.lampiran?.hasil_eeg_url },
-                { name: 'Hasil BERA', available: !!anak.lampiran?.hasil_bera_url, url: anak.lampiran?.hasil_bera_url },
-                { name: 'Hasil CT Scan', available: !!anak.lampiran?.hasil_ct_scan_url, url: anak.lampiran?.hasil_ct_scan_url },
-                { name: 'Program Terapi 3 Bulan', available: !!anak.lampiran?.program_terapi_3bln_url, url: anak.lampiran?.program_terapi_3bln_url },
-                { name: 'Hasil Psikologis/Psikiatris', available: !!anak.lampiran?.hasil_psikologis_psikiatris_url, url: anak.lampiran?.hasil_psikologis_psikiatris_url },
-              ].map((doc, idx) => (
-                <div key={idx} className={`border rounded-lg p-4 ${doc.available ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm font-medium ${doc.available ? 'text-green-800' : 'text-gray-600'}`}>{doc.name}</span>
-                    {doc.available && doc.url && (
-                      <button
-                        type="button"
-                        onClick={() => downloadLampiran(getFileNameFromUrl(doc.url || ''))}
-                        className="p-1 text-green-600 hover:text-green-800"
-                        title="Unduh lampiran"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {/* Lampiran Perjanjian */}
-              <div className={`border rounded-lg p-4 ${anak.lampiran?.perjanjian ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm font-medium ${anak.lampiran?.perjanjian ? 'text-green-800' : 'text-gray-600'}`}>Perjanjian</span>
-                  {anak.lampiran?.perjanjian && (
-                    <button
-                      type="button"
-                      onClick={() => downloadLampiran(getFileNameFromUrl(anak.lampiran.perjanjian || ''))}
-                      className="p-1 text-green-600 hover:text-green-800"
-                      title="Unduh lampiran"
-                    >
-                      <Download className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
+            {assessmentLoading ? (
+              <LoadingSpinner size="md" text="Memuat assessment..." />
+            ) : assessments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>Belum ada assessment untuk anak ini</p>
               </div>
-            </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipe Assessment</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Hasil</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Catatan</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Oleh</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {assessments.map((assessment) => (
+                      <tr key={assessment.id}>
+                        <td className="px-4 py-2 whitespace-nowrap">{assessment.assessment_date ? new Date(assessment.assessment_date).toLocaleDateString('id-ID') : '-'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{assessment.assessment_type}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{assessment.assessment_result || 'Menunggu Penilaian'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{assessment.notes || '-'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{assessment.user_created?.name || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </InfoCard>
 
           {/* Pemeriksaan Sebelumnya */}
@@ -1162,114 +1000,53 @@ const AnakDetailPage: React.FC = () => {
             )}
           </InfoCard>
 
-          {/* Assessment Section */}
-                     <InfoCard
-             icon={FileText}
-             title="Assessment"
-             sectionKey="assessment"
-           >
-             <div className="flex items-center justify-between mb-4">
-               <h3 className="text-lg font-semibold text-gray-900">Assessment</h3>
-               <Button
-                 onClick={() => {
-                   setEditingAssessment(null);
-                   setAssessmentForm({
-                     assessment_date: '',
-                     assessment_type: '',
-                     assessment_result: '',
-                     notes: ''
-                   });
-                   setShowAssessmentForm(true);
-                 }}
-                 className="px-4 py-2"
-               >
-                 Add Assessment
-               </Button>
-             </div>
-
-            {assessmentLoading ? (
-              <LoadingSpinner size="md" text="Memuat assessment..." />
-            ) : assessments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>Belum ada assessment untuk anak ini</p>
+          {/* Lampiran/Dokumen - paling bawah */}
+          <InfoCard
+            icon={ClipboardList}
+            title="Lampiran"
+            sectionKey="documents"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { name: 'Hasil EEG', available: !!anak.lampiran?.hasil_eeg_url, url: anak.lampiran?.hasil_eeg_url },
+                { name: 'Hasil BERA', available: !!anak.lampiran?.hasil_bera_url, url: anak.lampiran?.hasil_bera_url },
+                { name: 'Hasil CT Scan', available: !!anak.lampiran?.hasil_ct_scan_url, url: anak.lampiran?.hasil_ct_scan_url },
+                { name: 'Program Terapi 3 Bulan', available: !!anak.lampiran?.program_terapi_3bln_url, url: anak.lampiran?.program_terapi_3bln_url },
+                { name: 'Hasil Psikologis/Psikiatris', available: !!anak.lampiran?.hasil_psikologis_psikiatris_url, url: anak.lampiran?.hasil_psikologis_psikiatris_url },
+              ].map((doc, idx) => (
+                <div key={idx} className={`border rounded-lg p-4 ${doc.available ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm font-medium ${doc.available ? 'text-green-800' : 'text-gray-600'}`}>{doc.name}</span>
+                    {doc.available && doc.url && (
+                      <button
+                        type="button"
+                        onClick={() => downloadLampiran(getFileNameFromUrl(doc.url || ''))}
+                        className="p-1 text-green-600 hover:text-green-800"
+                        title="Unduh lampiran"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {/* Lampiran Perjanjian */}
+              <div className={`border rounded-lg p-4 ${anak.lampiran?.perjanjian ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm font-medium ${anak.lampiran?.perjanjian ? 'text-green-800' : 'text-gray-600'}`}>Perjanjian</span>
+                  {anak.lampiran?.perjanjian && (
+                    <button
+                      type="button"
+                      onClick={() => downloadLampiran(getFileNameFromUrl(anak.lampiran.perjanjian || ''))}
+                      className="p-1 text-green-600 hover:text-green-800"
+                      title="Unduh lampiran"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
-                         ) : (
-               <div className="space-y-3">
-                 {assessments.map(assessment => (
-                   <div key={assessment.id} className="border rounded-lg p-4 bg-gray-50">
-                     <div className="flex items-start justify-between">
-                       <div className="flex-1">
-                         <div className="flex items-center gap-2 mb-2">
-                           <h4 className="font-medium text-gray-900">
-                             {assessment.assessment_type}
-                           </h4>
-                           {assessment.assessment_date && (
-                             <span className="text-sm text-gray-500">
-                               {new Date(assessment.assessment_date).toLocaleDateString('id-ID')}
-                             </span>
-                           )}
-                         </div>
-                         <p className="text-gray-700 mb-1">
-                           <strong>Hasil:</strong> {assessment.assessment_result || 'Menunggu Penilaian'}
-                         </p>
-                         {assessment.notes && (
-                           <p className="text-gray-600 text-sm">{assessment.notes}</p>
-                         )}
-                         {assessment.user_created && (
-                           <p className="text-gray-500 text-xs mt-1">
-                             Oleh: {assessment.user_created.name}
-                           </p>
-                         )}
-                       </div>
-                       <div className="flex items-center gap-2">
-                         <Button
-                           onClick={() => handleEditAssessment(assessment)}
-                           variant="secondary"
-                           size="sm"
-                         >
-                           Edit
-                         </Button>
-                         <Button
-                           onClick={() => handleDeleteAssessment(assessment.id)}
-                           variant="danger"
-                           size="sm"
-                         >
-                           Hapus
-                         </Button>
-                       </div>
-                     </div>
-                   </div>
-                 ))}
-                 
-                 {/* Add Assessment Card */}
-                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-colors">
-                   <div className="text-center">
-                     <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                       <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                       </svg>
-                     </div>
-                     <h3 className="text-lg font-medium text-gray-900 mb-2">Tambah Assessment Baru</h3>
-                     <p className="text-gray-600 mb-4">Klik tombol di bawah untuk menambahkan assessment baru</p>
-                     <Button
-                       onClick={() => {
-                         setEditingAssessment(null);
-                         setAssessmentForm({
-                           assessment_date: '',
-                           assessment_type: '',
-                           assessment_result: '',
-                           notes: ''
-                         });
-                         setShowAssessmentForm(true);
-                       }}
-                       className="px-6 py-2"
-                     >
-                       Add Assessment
-                     </Button>
-                   </div>
-                 </div>
-               </div>
-             )}
+            </div>
           </InfoCard>
         </div>
       </div>

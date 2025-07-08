@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2, Eye, Users, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { anakAPI } from '../../services/api';
 import { AnakDetail, Pagination } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PatientList: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const PatientList: React.FC = () => {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [anakToDelete, setAnakToDelete] = useState<AnakDetail | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchAnak();
@@ -237,12 +239,16 @@ const PatientList: React.FC = () => {
                         <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" onClick={() => navigate(`/anak/${a.id}`)}>
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" onClick={() => navigate(`/anak/edit/${a.id}`)}>
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" onClick={() => handleDeleteClick(a)}>
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {user?.peran !== 'MANAJER' && (
+                          <>
+                            <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" onClick={() => navigate(`/anak/edit/${a.id}`)}>
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" onClick={() => handleDeleteClick(a)}>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

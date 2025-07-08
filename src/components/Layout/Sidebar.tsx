@@ -24,12 +24,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
   const location = useLocation();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['ADMIN', 'SUPERADMIN'] },
-    { id: 'anak', label: 'Anak', icon: Users, path: '/anak', roles: ['ADMIN', 'SUPERADMIN', 'TERAPIS'] },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['ADMIN', 'SUPERADMIN', 'MANAJER'] },
+    { id: 'anak', label: 'Anak', icon: Users, path: '/anak', roles: ['ADMIN', 'SUPERADMIN', 'TERAPIS', 'MANAJER'] },
+    { id: 'terapis', label: 'Terapis', icon: Users, path: '/terapis', roles: ['MANAJER'] },
+    { id: 'profile', label: 'Profil', icon: User, path: '/profile', roles: ['ADMIN', 'SUPERADMIN', 'TERAPIS', 'MANAJER'] },
     { id: 'assessment', label: 'Assessment', icon: FileText, path: '/assessment', roles: ['ADMIN', 'SUPERADMIN'] },
     { id: 'program-terapi', label: 'Program Terapi', icon: Activity, path: '/program-terapi', roles: ['ADMIN', 'SUPERADMIN'] },
     { id: 'users', label: 'Pengguna', icon: UserPlus, path: '/users', roles: ['SUPERADMIN'] },
-    { id: 'profile', label: 'Profil', icon: User, path: '/profile', roles: ['ADMIN', 'SUPERADMIN', 'TERAPIS'] },
   ];
 
   // Show loading state if auth is still loading

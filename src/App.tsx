@@ -16,6 +16,7 @@ import ProgramTerapiList from './components/Patients/ProgramTerapiList';
 import RegisterForm from './components/Auth/RegisterForm';
 import AnakEditForm from './components/Patients/AnakEditForm';
 import AnakAddForm from './components/Patients/AnakAddForm';
+import TerapisList from './components/Users/TerapisList';
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
@@ -32,6 +33,7 @@ const Dashboard: React.FC = () => {
     if (path === '/program-terapi') return 'program-terapi';
     if (path === '/users') return 'users';
     if (path === '/profile') return 'profile';
+    if (path === '/terapis') return 'terapis';
     return 'dashboard';
   };
 
@@ -57,6 +59,9 @@ const Dashboard: React.FC = () => {
       case 'profile':
         navigate('/profile');
         break;
+      case 'terapis':
+        navigate('/terapis');
+        break;
       default:
         navigate('/dashboard');
     }
@@ -76,6 +81,8 @@ const Dashboard: React.FC = () => {
         return 'Manajemen Pengguna';
       case 'profile':
         return 'Profil Saya';
+      case 'terapis':
+        return 'Manajemen Terapis';
       default:
         return 'Dashboard';
     }
@@ -95,6 +102,8 @@ const Dashboard: React.FC = () => {
         return 'Kelola pengguna sistem dan hak akses';
       case 'profile':
         return 'Kelola informasi profil Anda';
+      case 'terapis':
+        return 'Kelola data terapis dan informasi jadwal';
       default:
         return '';
     }
@@ -130,6 +139,11 @@ const Dashboard: React.FC = () => {
             <Route path="/program-terapi" element={
               <ProtectedRoute requiredRole="ADMIN-OR-HIGHER">
                 <ProgramTerapiList />
+              </ProtectedRoute>
+            } />
+            <Route path="/terapis" element={
+              <ProtectedRoute requiredRole="MANAGER-OR-SUPERADMIN">
+                <TerapisList />
               </ProtectedRoute>
             } />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
