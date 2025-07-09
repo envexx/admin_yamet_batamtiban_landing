@@ -17,6 +17,7 @@ import RegisterForm from './components/Auth/RegisterForm';
 import AnakEditForm from './components/Patients/AnakEditForm';
 import AnakAddForm from './components/Patients/AnakAddForm';
 import TerapisList from './components/Users/TerapisList';
+import ChatbotBubble from './components/ChatbotBubble';
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
@@ -184,6 +185,8 @@ function App() {
           <Route path="/register" element={<RegisterForm />} />
           <Route path="*" element={<AppContent />} />
         </Routes>
+        {/* Bubble Chatbot di kanan bawah */}
+        <ChatbotBubble />
       </AuthProvider>
     </Router>
   );

@@ -163,8 +163,8 @@ const defaultAnakDetail: AnakDetail = {
     pekerjaan_saat_ini: '',
     telepon: '',
     email: '',
-    tahun_meninggal: 0,
-    usia_saat_meninggal: 0,
+    tahun_meninggal: null,
+    usia_saat_meninggal: null,
     kewarganegaraan: '',
   },
   survey_awal: {
@@ -203,18 +203,18 @@ const defaultAnakDetail: AnakDetail = {
   riwayat_kelahiran: {
     id: 0,
     anak_id: 0,
-    jenis_kelahiran: '',
+    jenis_kelahiran: 'NORMAL', // default ke enum valid
     alasan_sc: '',
     bantuan_kelahiran: [],
     is_premature: false,
     usia_kelahiran_bulan: 0,
-    posisi_bayi_saat_lahir: '',
+    posisi_bayi_saat_lahir: 'KEPALA', // default ke enum valid
     is_sungsang: false,
     is_kuning: false,
     detak_jantung_anak: '',
     apgar_score: '',
     lama_persalinan: '',
-    penolong_persalinan: '',
+    penolong_persalinan: 'DOKTER', // default ke enum valid
     tempat_bersalin: '',
     cerita_spesifik_kelahiran: '',
     berat_badan_bayi: null,
@@ -564,7 +564,28 @@ function cleanDataForAPI(data: typeof defaultAnakDetail) {
 
 const AnakAddForm: React.FC = () => {
   const navigate = useNavigate();
-  const [anakData, setAnakData] = useState<AnakDetail>(defaultAnakDetail);
+  const [anakData, setAnakData] = useState<AnakDetail>({
+    ...defaultAnakDetail,
+    jenis_kelamin: 'laki_laki', // enum string sesuai tipe
+    ayah: {
+      ...defaultAnakDetail.ayah,
+      usia: 0,
+      anak_ke: 0,
+      pernikahan_ke: 0,
+      usia_saat_menikah: 0,
+      tahun_meninggal: null,
+      usia_saat_meninggal: null,
+    },
+    ibu: {
+      ...defaultAnakDetail.ibu,
+      usia: 0,
+      anak_ke: 0,
+      pernikahan_ke: 0,
+      usia_saat_menikah: 0,
+      tahun_meninggal: null,
+      usia_saat_meninggal: null,
+    },
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatingNumber, setGeneratingNumber] = useState(false);
@@ -960,6 +981,19 @@ const AnakAddForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validasi enum wajib pilih
+    if (!anakData.riwayat_kelahiran.jenis_kelahiran) {
+      showAlert({ type: 'error', title: 'Validasi', message: 'Jenis kelahiran wajib dipilih!' });
+      return;
+    }
+    if (!anakData.riwayat_kelahiran.posisi_bayi_saat_lahir) {
+      showAlert({ type: 'error', title: 'Validasi', message: 'Posisi bayi saat lahir wajib dipilih!' });
+      return;
+    }
+    if (!anakData.riwayat_kelahiran.penolong_persalinan) {
+      showAlert({ type: 'error', title: 'Validasi', message: 'Penolong persalinan wajib dipilih!' });
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -2026,7 +2060,7 @@ const AnakAddForm: React.FC = () => {
                       onChange={handleChange}
                       className="w-full px-2 py-1 border rounded"
                     >
-                      <option value="">Pilih Jenis Kelahiran</option>
+                      {/* <option value="">Pilih Jenis Kelahiran</option> */}
                       <option value="NORMAL">NORMAL</option>
                       <option value="CAESAR">CAESAR</option>
                     </select>
@@ -2054,7 +2088,7 @@ const AnakAddForm: React.FC = () => {
                       onChange={handleChange}
                       className="w-full px-2 py-1 border rounded"
                     >
-                      <option value="">Pilih Posisi</option>
+                      {/* <option value="">Pilih Posisi</option> */}
                       <option value="KEPALA">KEPALA</option>
                       <option value="KAKI">KAKI</option>
                     </select>
@@ -2093,7 +2127,7 @@ const AnakAddForm: React.FC = () => {
                       onChange={handleChange}
                       className="w-full px-2 py-1 border rounded"
                     >
-                      <option value="">Pilih Penolong</option>
+                      {/* <option value="">Pilih Penolong</option> */}
                       <option value="DOKTER">DOKTER</option>
                       <option value="BIDAN">BIDAN</option>
                       <option value="DUKUN_BAYI">DUKUN BAYI</option>
