@@ -174,7 +174,10 @@ const AppContent: React.FC = () => {
     return <LoginForm />;
   }
 
-  return <Dashboard />;
+  return <>
+    <Dashboard />
+    <ChatbotBubble />
+  </>;
 };
 
 function App() {
@@ -185,8 +188,6 @@ function App() {
           <Route path="/register" element={<RegisterForm />} />
           <Route path="*" element={<AppContent />} />
         </Routes>
-        {/* Bubble Chatbot di kanan bawah */}
-        <ChatbotBubble />
       </AuthProvider>
     </Router>
   );

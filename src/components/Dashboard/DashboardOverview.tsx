@@ -281,13 +281,6 @@ const DashboardOverview: React.FC = () => {
               <p className="text-gray-600">Anak yang lulus terapi</p>
             </div>
           )}
-          {typeof stats.insight.avg_therapy_duration_month !== 'undefined' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-blue-600 mb-4">Durasi Terapi Rata-rata</h3>
-              <div className="text-4xl font-bold text-blue-600 mb-2">{stats.insight.avg_therapy_duration_month}</div>
-              <p className="text-gray-600">Bulan</p>
-            </div>
-          )}
         </div>
       )}
     </div>

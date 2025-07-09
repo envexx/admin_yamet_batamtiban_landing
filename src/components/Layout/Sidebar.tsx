@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -24,6 +24,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen, onToggleSidebar }) => {
   const { user, logout, isLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = React.useState(false);
 
@@ -261,7 +262,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
                   )}
                   <hr className="my-1 border-gray-200" />
                   <button
-                    onClick={logout}
+                    onClick={() => {
+                      logout();
+                      navigate('/login', { replace: true });
+                    }}
                     className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
