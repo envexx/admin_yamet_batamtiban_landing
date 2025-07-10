@@ -36,7 +36,12 @@ export default function ChatbotBubble() {
     try {
       const token = localStorage.getItem('token');
       console.debug('[ChatbotBubble] Token:', token);
-      const res = await fetch('/api/chatbot', {
+      // Gunakan NEXT_PUBLIC_API_URL jika ada, fallback ke /api/chatbot
+      const apiBase = import.meta.env.VITE_API_URL || import.meta.env.NEXT_PUBLIC_API_URL || '';
+      const chatbotUrl = apiBase
+        ? apiBase.replace(/\/$/, '') + '/chatbot'
+        : '/api/chatbot';
+      const res = await fetch(chatbotUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,6 +49,7 @@ export default function ChatbotBubble() {
         },
         body: JSON.stringify({ message: userMessage.text }),
       });
+      console.debug('[ChatbotBubble] Request URL:', chatbotUrl);
       console.debug('[ChatbotBubble] Response status:', res.status);
       let data;
       try {

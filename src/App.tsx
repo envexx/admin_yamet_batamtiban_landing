@@ -18,6 +18,29 @@ import AnakEditForm from './components/Patients/AnakEditForm';
 import AnakAddForm from './components/Patients/AnakAddForm';
 import TerapisList from './components/Users/TerapisList';
 import ChatbotBubble from './components/ChatbotBubble';
+import NotFoundPage from './components/NotFoundPage';
+import ServerErrorPage from './components/ServerErrorPage';
+
+// ErrorBoundary untuk menangkap error 500
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+  componentDidCatch(error: any, errorInfo: any) {
+    // Bisa log error ke server di sini
+    // console.error(error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <ServerErrorPage onRetry={() => window.location.reload()} />;
+    }
+    return this.props.children;
+  }
+}
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
@@ -171,6 +194,10 @@ const AppContent: React.FC = () => {
     if (location.pathname === '/register') {
       return <RegisterForm />;
     }
+    // Jika user tidak login dan bukan di /register, tampilkan NotFoundPage
+    if (location.pathname !== '/login') {
+      return <NotFoundPage />;
+    }
     return <LoginForm />;
   }
 
@@ -184,13 +211,26 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          <Route path="/register" element={<RegisterForm />} />
-          <Route path="*" element={<AppContent />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/register" element={<RegisterForm />} />
+            {/* Route root: redirect tergantung status login */}
+            <Route path="/" element={<RootRedirect />} />
+            <Route path="*" element={<AppContent />} />
+            <Route path="/404" element={<NotFoundPage />} />
+          </Routes>
+        </ErrorBoundary>
       </AuthProvider>
     </Router>
   );
 }
+
+// Komponen untuk redirect root sesuai status login
+const RootRedirect: React.FC = () => {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/login" replace />;
+};
 
 export default App;
