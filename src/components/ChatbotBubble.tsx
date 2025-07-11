@@ -112,7 +112,7 @@ export default function ChatbotBubble() {
                 <MessageCircle className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">Assistant</h3>
+                <h3 className="font-medium text-gray-900">Yova</h3>
                 <p className="text-xs text-gray-500">Online</p>
               </div>
             </div>
