@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 export default function ChatbotBubble() {
   const [open, setOpen] = useState(false);
@@ -134,12 +135,16 @@ export default function ChatbotBubble() {
               >
                 <div className={`max-w-xs ${msg.from === 'user' ? 'text-right' : 'text-left'}`}>
                   <div
-                    className={`rounded-lg px-3 py-2 text-sm ${msg.from === 'user'
+                    className={`rounded-lg px-3 py-2 text-sm ${
+                      msg.from === 'user'
                         ? 'bg-gray-900 text-white'
                         : 'bg-gray-100 text-gray-900'
-                      }`}
+                    }`}
                   >
-                    {msg.text}
+                    {msg.from === 'bot'
+                      ? <ReactMarkdown className="prose prose-sm max-w-xs">{msg.text}</ReactMarkdown>
+                      : msg.text
+                    }
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     {formatTime(msg.timestamp)}
