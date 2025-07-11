@@ -40,7 +40,7 @@ export default function ChatbotBubble() {
       const apiBase = import.meta.env.VITE_API_URL || import.meta.env.NEXT_PUBLIC_API_URL || '';
       const chatbotUrl = apiBase
         ? apiBase.replace(/\/$/, '') + '/chatbot'
-        : '/api/chatbot';
+        : '/chatbot';
       const res = await fetch(chatbotUrl, {
         method: 'POST',
         headers: {
