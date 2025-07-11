@@ -37,10 +37,10 @@ export default function ChatbotBubble() {
       const token = localStorage.getItem('token');
       console.debug('[ChatbotBubble] Token:', token);
       // Gunakan NEXT_PUBLIC_API_URL jika ada, fallback ke /api/chatbot
-      const apiBase = import.meta.env.VITE_API_URL || import.meta.env.NEXT_PUBLIC_API_URL || '';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
       const chatbotUrl = apiBase
         ? apiBase.replace(/\/$/, '') + '/chatbot'
-        : '/chatbot';
+        : 'https://api.yametbatamtiban.id/api/chatbot';
       const res = await fetch(chatbotUrl, {
         method: 'POST',
         headers: {
@@ -134,11 +134,10 @@ export default function ChatbotBubble() {
               >
                 <div className={`max-w-xs ${msg.from === 'user' ? 'text-right' : 'text-left'}`}>
                   <div
-                    className={`rounded-lg px-3 py-2 text-sm ${
-                      msg.from === 'user'
+                    className={`rounded-lg px-3 py-2 text-sm ${msg.from === 'user'
                         ? 'bg-gray-900 text-white'
                         : 'bg-gray-100 text-gray-900'
-                    }`}
+                      }`}
                   >
                     {msg.text}
                   </div>
