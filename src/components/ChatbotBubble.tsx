@@ -36,7 +36,7 @@ export default function ChatbotBubble() {
     simulateTyping();
     try {
       const token = localStorage.getItem('token');
-      console.debug('[ChatbotBubble] Token:', token);
+      // console.debug('[ChatbotBubble] Token:', token);
       // Gunakan NEXT_PUBLIC_API_URL jika ada, fallback ke /api/chatbot
       const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
       const chatbotUrl = apiBase
@@ -50,12 +50,12 @@ export default function ChatbotBubble() {
         },
         body: JSON.stringify({ message: userMessage.text }),
       });
-      console.debug('[ChatbotBubble] Request URL:', chatbotUrl);
-      console.debug('[ChatbotBubble] Response status:', res.status);
+              // console.debug('[ChatbotBubble] Request URL:', chatbotUrl);
+              // console.debug('[ChatbotBubble] Response status:', res.status);
       let data;
       try {
         data = await res.json();
-        console.debug('[ChatbotBubble] Response JSON:', data);
+                  // console.debug('[ChatbotBubble] Response JSON:', data);
       } catch (jsonErr) {
         console.error('[ChatbotBubble] Failed to parse JSON:', jsonErr);
         setMessages(msgs => [...msgs, { from: 'bot', text: 'Maaf, balasan server tidak valid.', timestamp: new Date() }]);

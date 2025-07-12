@@ -19,7 +19,7 @@ const ProfileSettings: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('Updating form data with user:', user); // Debug log
+      // console.log('Updating form data with user:', user); // Debug log
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -50,15 +50,15 @@ const ProfileSettings: React.FC = () => {
         phone: formData.phone.trim() || undefined,
       };
 
-      console.log('Sending form data:', cleanFormData); // Debug log
+      // console.log('Sending form data:', cleanFormData); // Debug log
       
       const response = await authAPI.updateProfile(cleanFormData);
-      console.log('Update profile response:', response); // Debug log
+              // console.log('Update profile response:', response); // Debug log
       
       if (response.status === 'success' && response.data) {
         // Pastikan kita mengirim data user yang benar ke updateUser
         const updatedUserData = response.data.user;
-        console.log('Updated user data:', updatedUserData); // Debug log
+                  // console.log('Updated user data:', updatedUserData); // Debug log
         
         updateUser(updatedUserData);
         setSuccess('Profile berhasil diperbarui!');

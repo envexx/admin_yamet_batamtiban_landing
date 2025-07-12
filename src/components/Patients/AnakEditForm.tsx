@@ -341,6 +341,7 @@ const defaultAnakDetail: AnakDetail = {
     perilaku_bertemu_orang_baru: '',
     perilaku_bertemu_teman_sebaya: '',
     perilaku_bertemu_orang_lebih_tua: '',
+    perilaku_bertemu_orang_lebih_muda: '',
     bermain_dengan_banyak_anak: '',
     keterangan_lainnya: '',
   },
@@ -562,7 +563,7 @@ function cleanDataForAPI(data: typeof defaultAnakDetail) {
   };
 }
 
-const AnakAddForm: React.FC = () => {
+const AnakEditForm: React.FC = () => {
   const navigate = useNavigate();
   const [anakData, setAnakData] = useState<AnakDetail>(defaultAnakDetail);
   const [loading, setLoading] = useState(false);
@@ -628,6 +629,7 @@ const AnakAddForm: React.FC = () => {
   const [perilakuOrangLebihTuaTags, setPerilakuOrangLebihTuaTags] = useState<{ id: string, text: string }[]>([]);
   const [bermainDenganBanyakAnakTags, setBermainDenganBanyakAnakTags] = useState<{ id: string, text: string }[]>([]);
   const [perkembanganSosialKeteranganTags, setPerkembanganSosialKeteranganTags] = useState<{ id: string, text: string }[]>([]);
+  const [perilakuOrangLebihMudaTags, setPerilakuOrangLebihMudaTags] = useState<{ id: string, text: string }[]>([]);
 
   // Fungsi untuk menghitung usia berdasarkan tanggal lahir
   const calculateAge = (birthDate: string): number => {
@@ -966,7 +968,7 @@ const AnakAddForm: React.FC = () => {
       // Bersihkan data sebelum dikirim
       const cleanedData = cleanDataForAPI(anakData);
       // Log data yang dikirim ke backend
-      console.log('[FRONTEND] Data yang dikirim ke backend:', cleanedData);
+              // console.log('[FRONTEND] Data yang dikirim ke backend:', cleanedData);
       // Update data anak (PUT)
       const res = await anakAPI.update(anakData.id, cleanedData);
       // Upload lampiran jika ada file baru
@@ -1063,6 +1065,17 @@ const AnakAddForm: React.FC = () => {
     }));
   };
 
+  const handlePerilakuOrangLebihMudaChange = (tags: { id: string, text: string }[]) => {
+    setPerilakuOrangLebihMudaTags(tags);
+    setAnakData(prev => ({
+      ...prev,
+      perkembangan_sosial: {
+        ...prev.perkembangan_sosial,
+        perilaku_bertemu_orang_lebih_muda: tags.map(t => t.text).join(', ')
+      }
+    }));
+  };
+
   const topFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1088,6 +1101,7 @@ const AnakAddForm: React.FC = () => {
   const [perilakuOrangBaruInput, setPerilakuOrangBaruInput] = useState('');
   const [perilakuTemanSebayaInput, setPerilakuTemanSebayaInput] = useState('');
   const [perilakuOrangLebihTuaInput, setPerilakuOrangLebihTuaInput] = useState('');
+  const [perilakuOrangLebihMudaInput, setPerilakuOrangLebihMudaInput] = useState('');
   const [bermainDenganBanyakAnakInput, setBermainDenganBanyakAnakInput] = useState('');
   const [perkembanganSosialKeteranganInput, setPerkembanganSosialKeteranganInput] = useState('');
 
@@ -1350,6 +1364,41 @@ const AnakAddForm: React.FC = () => {
     }
   };
 
+  const addPerilakuOrangLebihMudaTag = () => {
+    const val = perilakuOrangLebihMudaInput.trim();
+    if (val && !perilakuOrangLebihMudaTags.some(t => t.text === val)) {
+      const newTags = [...perilakuOrangLebihMudaTags, { id: String(Date.now()), text: val }];
+      setPerilakuOrangLebihMudaTags(newTags);
+      setPerilakuOrangLebihMudaInput('');
+      setAnakData(prev => ({
+        ...prev,
+        perkembangan_sosial: {
+          ...prev.perkembangan_sosial,
+          perilaku_bertemu_orang_lebih_muda: newTags.map(t => t.text).join(', ')
+        }
+      }));
+    }
+  };
+
+  const removePerilakuOrangLebihMudaTag = (index: number) => {
+    const newTags = perilakuOrangLebihMudaTags.filter((_, i) => i !== index);
+    setPerilakuOrangLebihMudaTags(newTags);
+    setAnakData(prev => ({
+      ...prev,
+      perkembangan_sosial: {
+        ...prev.perkembangan_sosial,
+        perilaku_bertemu_orang_lebih_muda: newTags.map(t => t.text).join(', ')
+      }
+    }));
+  };
+
+  const handlePerilakuOrangLebihMudaKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addPerilakuOrangLebihMudaTag();
+    }
+  };
+
   const { id } = useParams();
 
   useEffect(() => {
@@ -1357,7 +1406,7 @@ const AnakAddForm: React.FC = () => {
       anakAPI.getById(Number(id))
         .then((res: any) => {
           if (res && res.data) {
-            console.log('[BACKEND] Data anak yang diterima untuk edit:', res.data);
+            // console.log('[BACKEND] Data anak yang diterima untuk edit:', res.data);
             setAnakData(res.data); // Set seluruh data dari backend ke state
           } else {
             showAlert({ type: 'error', title: 'Error', message: 'Data anak tidak ditemukan' });
@@ -1374,33 +1423,34 @@ const AnakAddForm: React.FC = () => {
   useEffect(() => {
     if (isFirstLoad && anakData && anakData.id) {
       setBirthDateComponents(parseDateComponents(anakData.birth_date));
-      setAyahDateComponents(parseDateComponents(anakData.ayah.tanggal_lahir));
-      setIbuDateComponents(parseDateComponents(anakData.ibu.tanggal_lahir));
+      setAyahDateComponents(parseDateComponents(anakData.ayah?.tanggal_lahir));
+      setIbuDateComponents(parseDateComponents(anakData.ibu?.tanggal_lahir));
       setPemeriksaanDateComponents(parseDateComponents(anakData.tanggal_pemeriksaan));
       setMulaiTerapiDateComponents(parseDateComponents(anakData.mulai_terapi));
       setSelesaiTerapiDateComponents(parseDateComponents(anakData.selesai_terapi));
       setMulaiCutiDateComponents(parseDateComponents(anakData.mulai_cuti));
       // Tag/tag array
-      setKeluhanOrtuTags((anakData.survey_awal.keluhan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
-      setTindakanOrtuTags((anakData.survey_awal.tindakan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
-      setKendalaTags((anakData.survey_awal.kendala || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+      setKeluhanOrtuTags((anakData.survey_awal?.keluhan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+      setTindakanOrtuTags((anakData.survey_awal?.tindakan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+      setKendalaTags((anakData.survey_awal?.kendala || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
       setIsFirstLoad(false);
     }
   }, [anakData, isFirstLoad]);
 
   useEffect(() => {
     // Update tag input
-    setKeluhanOrtuTags((anakData.survey_awal.keluhan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
-    setTindakanOrtuTags((anakData.survey_awal.tindakan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
-    setKendalaTags((anakData.survey_awal.kendala || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
-    setPantanganMakananTags((anakData.pola_makan.pantangan_makanan || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
-    setKeluhanGuruTags((anakData.riwayat_pendidikan.keluhan_guru || []).map((t, i) => ({ id: String(i), text: t })));
-    setTinggalDenganTags((anakData.hubungan_keluarga.tinggal_dengan || []).map((t, i) => ({ id: String(i), text: t })));
-    setPerilakuOrangBaruTags((anakData.perkembangan_sosial.perilaku_bertemu_orang_baru || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
-    setPerilakuTemanSebayaTags((anakData.perkembangan_sosial.perilaku_bertemu_teman_sebaya || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
-    setPerilakuOrangLebihTuaTags((anakData.perkembangan_sosial.perilaku_bertemu_orang_lebih_tua || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
-    setBermainDenganBanyakAnakTags((anakData.perkembangan_sosial.bermain_dengan_banyak_anak || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
-    setPerkembanganSosialKeteranganTags((anakData.perkembangan_sosial.keterangan_lainnya || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
+    setKeluhanOrtuTags((anakData.survey_awal?.keluhan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+    setTindakanOrtuTags((anakData.survey_awal?.tindakan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+    setKendalaTags((anakData.survey_awal?.kendala || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+    setPantanganMakananTags((anakData.pola_makan?.pantangan_makanan || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
+    setKeluhanGuruTags((anakData.riwayat_pendidikan?.keluhan_guru || []).map((t, i) => ({ id: String(i), text: t })));
+    setTinggalDenganTags((anakData.hubungan_keluarga?.tinggal_dengan || []).map((t, i) => ({ id: String(i), text: t })));
+    setPerilakuOrangBaruTags((anakData.perkembangan_sosial?.perilaku_bertemu_orang_baru || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
+    setPerilakuTemanSebayaTags((anakData.perkembangan_sosial?.perilaku_bertemu_teman_sebaya || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
+    setPerilakuOrangLebihTuaTags((anakData.perkembangan_sosial?.perilaku_bertemu_orang_lebih_tua || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
+    setBermainDenganBanyakAnakTags((anakData.perkembangan_sosial?.bermain_dengan_banyak_anak || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
+    setPerkembanganSosialKeteranganTags((anakData.perkembangan_sosial?.keterangan_lainnya || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
+    setPerilakuOrangLebihMudaTags((anakData.perkembangan_sosial?.perilaku_bertemu_orang_lebih_muda || '').split(',').filter(Boolean).map((t, i) => ({ id: String(i), text: t.trim() })));
   }, [anakData]);
 
   return (
@@ -1409,7 +1459,7 @@ const AnakAddForm: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-6">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">Tambah Data Anak</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Edit Data Anak</h1>
             </div>
             <div className="mt-2 sm:mt-0">
               <Button variant="secondary" size="sm" onClick={() => navigate(-1)}>
@@ -2168,34 +2218,61 @@ const AnakAddForm: React.FC = () => {
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 space-y-6 mb-8">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-1">Imunisasi</h2>
                 <p className="text-xs italic text-gray-500 mb-5">centang jika ya, biarkan jika tidak</p>
-                <div className="space-y-4">
-                  {[
-                    { label: 'BCG', name: 'riwayat_imunisasi.bgc' },
-                    { label: 'Hepatitis B1', name: 'riwayat_imunisasi.hep_b1' },
-                    { label: 'Hepatitis B2', name: 'riwayat_imunisasi.hep_b2' },
-                    { label: 'Hepatitis B3', name: 'riwayat_imunisasi.hep_b3' },
-                    { label: 'DPT 1', name: 'riwayat_imunisasi.dpt_1' },
-                    { label: 'DPT 2', name: 'riwayat_imunisasi.dpt_2' },
-                    { label: 'DPT 3', name: 'riwayat_imunisasi.dpt_3' },
-                    { label: 'DPT Booster 1', name: 'riwayat_imunisasi.dpt_booster_1' },
-                    { label: 'Polio 1', name: 'riwayat_imunisasi.polio_1' },
-                    { label: 'Polio 2', name: 'riwayat_imunisasi.polio_2' },
-                    { label: 'Polio 3', name: 'riwayat_imunisasi.polio_3' },
-                    { label: 'Polio 4', name: 'riwayat_imunisasi.polio_4' },
-                    { label: 'Polio Booster 1', name: 'riwayat_imunisasi.polio_booster_1' },
-                    { label: 'Campak 1', name: 'riwayat_imunisasi.campak_1' },
-                    { label: 'Campak 2', name: 'riwayat_imunisasi.campak_2' },
-                    { label: 'HIB 1', name: 'riwayat_imunisasi.hib_1' },
-                    { label: 'HIB 2', name: 'riwayat_imunisasi.hib_2' },
-                    { label: 'HIB 3', name: 'riwayat_imunisasi.hib_3' },
-                    { label: 'HIB 4', name: 'riwayat_imunisasi.hib_4' },
-                    { label: 'MMR 1', name: 'riwayat_imunisasi.mmr_1' },
-                  ].map(imun => (
-                    <div key={imun.name} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                      <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[220px] flex-shrink-0">{imun.label}</label>
-                      <input type="checkbox" name={imun.name} checked={!!(anakData.riwayat_imunisasi as any)[imun.name.split('.')[1]]} onChange={handleChange} className="w-5 h-5" />
+                
+                {/* Tabel Imunisasi */}
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                    <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-500">Jenis Imunisasi</th>
+                        <th className="px-4 py-3 text-center font-semibold text-sm border-r border-blue-500">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {[
+                        { label: 'BCG', name: 'riwayat_imunisasi.bgc', category: 'Dasar' },
+                        { label: 'Hepatitis B1', name: 'riwayat_imunisasi.hep_b1', category: 'Dasar' },
+                        { label: 'Hepatitis B2', name: 'riwayat_imunisasi.hep_b2', category: 'Dasar' },
+                        { label: 'Hepatitis B3', name: 'riwayat_imunisasi.hep_b3', category: 'Dasar' },
+                        { label: 'DPT 1', name: 'riwayat_imunisasi.dpt_1', category: 'Dasar' },
+                        { label: 'DPT 2', name: 'riwayat_imunisasi.dpt_2', category: 'Dasar' },
+                        { label: 'DPT 3', name: 'riwayat_imunisasi.dpt_3', category: 'Dasar' },
+                        { label: 'DPT 4', name: 'riwayat_imunisasi.dpt_booster_1', category: 'Lanjutan' },
+                        { label: 'Polio 1', name: 'riwayat_imunisasi.polio_1', category: 'Dasar' },
+                        { label: 'Polio 2', name: 'riwayat_imunisasi.polio_2', category: 'Dasar' },
+                        { label: 'Polio 3', name: 'riwayat_imunisasi.polio_3', category: 'Dasar' },
+                        { label: 'Polio 4', name: 'riwayat_imunisasi.polio_4', category: 'Dasar' },
+                        { label: 'Polio 5', name: 'riwayat_imunisasi.polio_booster_1', category: 'Lanjutan' },
+                        { label: 'Campak 1', name: 'riwayat_imunisasi.campak_1', category: 'Dasar' },
+                        { label: 'Campak 2', name: 'riwayat_imunisasi.campak_2', category: 'Lanjutan' },
+                        { label: 'HIB 1', name: 'riwayat_imunisasi.hib_1', category: 'Dasar' },
+                        { label: 'HIB 2', name: 'riwayat_imunisasi.hib_2', category: 'Dasar' },
+                        { label: 'HIB 3', name: 'riwayat_imunisasi.hib_3', category: 'Dasar' },
+                        { label: 'HIB 4', name: 'riwayat_imunisasi.hib_4', category: 'Lanjutan' },
+                        { label: 'MMR 1', name: 'riwayat_imunisasi.mmr_1', category: 'Lanjutan' },
+                      ].map((imun, index) => (
+                        <tr key={imun.name} className={`border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                          <td className="px-4 py-3 border-r border-gray-200">
+                            <span className="font-medium text-gray-900">{imun.label}</span>
+                          </td>
+                          <td className="px-4 py-3 border-r border-gray-200 text-center">
+                            <div className="flex items-center justify-center">
+                              <input 
+                                type="checkbox" 
+                                name={imun.name} 
+                                checked={!!(anakData.riwayat_imunisasi as any)[imun.name.split('.')[1]]} 
+                                onChange={handleChange} 
+                                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                              />
+                              <span className="ml-2 text-sm text-gray-600">
+                                {!!(anakData.riwayat_imunisasi as any)[imun.name.split('.')[1]] ? 'Sudah' : 'Belum'}
+                              </span>
                     </div>
+                          </td>
+                        </tr>
                   ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
               {/* Setelah Lahir */}
@@ -2273,66 +2350,170 @@ const AnakAddForm: React.FC = () => {
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 space-y-6 mb-8">
                 <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-1">Perkembangan Anak</h2>
                 <p className="text-xs italic text-gray-500 mb-5">centang jika ya, biarkan jika tidak</p>
-                <div className="space-y-4">
-                  {[
-                    { label: 'Tengkurap', name: 'perkembangan_anak.tengkurap_ya', type: 'checkbox' },
-                    { label: 'Tengkurap Usia', name: 'perkembangan_anak.tengkurap_usia', type: 'text' },
-                    { label: 'Berguling', name: 'perkembangan_anak.berguling_ya', type: 'checkbox' },
-                    { label: 'Berguling Usia', name: 'perkembangan_anak.berguling_usia', type: 'text' },
-                    { label: 'Duduk', name: 'perkembangan_anak.duduk_ya', type: 'checkbox' },
-                    { label: 'Duduk Usia', name: 'perkembangan_anak.duduk_usia', type: 'text' },
-                    { label: 'Merayap', name: 'perkembangan_anak.merayap_ya', type: 'checkbox' },
-                    { label: 'Merayap Usia', name: 'perkembangan_anak.merayap_usia', type: 'text' },
-                    { label: 'Merangkak', name: 'perkembangan_anak.merangkak_ya', type: 'checkbox' },
-                    { label: 'Merangkak Usia', name: 'perkembangan_anak.merangkak_usia', type: 'text' },
-                    { label: 'Jongkok', name: 'perkembangan_anak.jongkok_ya', type: 'checkbox' },
-                    { label: 'Jongkok Usia', name: 'perkembangan_anak.jongkok_usia', type: 'text' },
-                    { label: 'Transisi Berdiri', name: 'perkembangan_anak.transisi_berdiri_ya', type: 'checkbox' },
-                    { label: 'Transisi Berdiri Usia', name: 'perkembangan_anak.transisi_berdiri_usia', type: 'text' },
-                    { label: 'Berdiri Tanpa Pegangan', name: 'perkembangan_anak.berdiri_tanpa_pegangan_ya', type: 'checkbox' },
-                    { label: 'Berdiri Tanpa Pegangan Usia', name: 'perkembangan_anak.berdiri_tanpa_pegangan_usia', type: 'text' },
-                    { label: 'Berlari', name: 'perkembangan_anak.berlari_ya', type: 'checkbox' },
-                    { label: 'Berlari Usia', name: 'perkembangan_anak.berlari_usia', type: 'text' },
-                    { label: 'Melompat', name: 'perkembangan_anak.melompat_ya', type: 'checkbox' },
-                    { label: 'Melompat Usia', name: 'perkembangan_anak.melompat_usia', type: 'text' },
-                    { label: 'Reflek Vokalisasi', name: 'perkembangan_anak.reflek_vokalisasi_ya', type: 'checkbox' },
-                    { label: 'Reflek Vokalisasi Usia', name: 'perkembangan_anak.reflek_vokalisasi_usia', type: 'text' },
-                    { label: 'Bubbling', name: 'perkembangan_anak.bubbling_ya', type: 'checkbox' },
-                    { label: 'Bubbling Usia', name: 'perkembangan_anak.bubbling_usia', type: 'text' },
-                    { label: 'Lalling', name: 'perkembangan_anak.lalling_ya', type: 'checkbox' },
-                    { label: 'Lalling Usia', name: 'perkembangan_anak.lalling_usia', type: 'text' },
-                    { label: 'Echolalia', name: 'perkembangan_anak.echolalia_ya', type: 'checkbox' },
-                    { label: 'Echolalia Usia', name: 'perkembangan_anak.echolalia_usia', type: 'text' },
-                    { label: 'True Speech', name: 'perkembangan_anak.true_speech_ya', type: 'checkbox' },
-                    { label: 'True Speech Usia', name: 'perkembangan_anak.true_speech_usia', type: 'text' },
-                    { label: 'Mengucapkan 1 Kata', name: 'perkembangan_anak.mengucapkan_1_kata_ya', type: 'checkbox' },
-                    { label: 'Mengucapkan 1 Kata Usia', name: 'perkembangan_anak.mengucapkan_1_kata_usia', type: 'text' },
-                    { label: 'Ungkap Keinginan 2 Kata', name: 'perkembangan_anak.ungkap_keinginan_2_kata_ya', type: 'checkbox' },
-                    { label: 'Ungkap Keinginan 2 Kata Usia', name: 'perkembangan_anak.ungkap_keinginan_2_kata_usia', type: 'text' },
-                    { label: 'Bercerita', name: 'perkembangan_anak.bercerita_ya', type: 'checkbox' },
-                    { label: 'Bercerita Usia', name: 'perkembangan_anak.bercerita_usia', type: 'text' },
-                    { label: 'Tertarik Lingkungan Luar', name: 'perkembangan_anak.tertarik_lingkungan_luar_ya', type: 'checkbox' },
-                    { label: 'Tertarik Lingkungan Luar Usia', name: 'perkembangan_anak.tertarik_lingkungan_luar_usia', type: 'text' },
-                    { label: 'Mampu Digendong Siapapun', name: 'perkembangan_anak.digendong_siapapun_ya', type: 'checkbox' },
-                    { label: 'Digendong Siapapun Usia', name: 'perkembangan_anak.digendong_siapapun_usia', type: 'text' },
-                    { label: 'Mampu Interaksi Timbal Balik', name: 'perkembangan_anak.interaksi_timbal_balik_ya', type: 'checkbox' },
-                    { label: 'Interaksi Timbal Balik Usia', name: 'perkembangan_anak.interaksi_timbal_balik_usia', type: 'text' },
-                    { label: 'Mampu Komunikasi Ekspresi Ibu', name: 'perkembangan_anak.komunikasi_ekspresi_ibu_ya', type: 'checkbox' },
-                    { label: 'Komunikasi Ekspresi Ibu Usia', name: 'perkembangan_anak.komunikasi_ekspresi_ibu_usia', type: 'text' },
-                    { label: 'Mampu Mengekspresikan Emosi Tersenyum, Senang,Marah', name: 'perkembangan_anak.ekspresi_emosi_ya', type: 'checkbox' },
-                    { label: 'Ekspresi Emosi Usia', name: 'perkembangan_anak.ekspresi_emosi_usia', type: 'text' },
-                    { label: 'Berjalan Tanpa Pegangan', name: 'perkembangan_anak.berjalan_tanpa_pegangan_ya', type: 'checkbox' },
-                    { label: 'Berjalan Tanpa Pegangan Usia', name: 'perkembangan_anak.berjalan_tanpa_pegangan_usia', type: 'text' },
-                  ].map(field => (
-                    <div key={field.name} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                      <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[220px] flex-shrink-0">{field.label}</label>
-                      {field.type === 'checkbox' ? (
-                        <input type="checkbox" name={field.name} checked={!!(anakData.perkembangan_anak as any)[field.name.split('.')[1]]} onChange={handleChange} className="w-5 h-5" />
-                      ) : (
-                        <input type="text" name={field.name} value={(anakData.perkembangan_anak as any)[field.name.split('.')[1]] || ''} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
-                      )}
-                    </div>
-                  ))}
+                
+                                {/* Tabel Perkembangan Motorik Kasar */}
+                <div className="overflow-x-auto mb-6">
+                  <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                    <thead className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold text-sm border-r border-green-500">Perkembangan Motorik Kasar</th>
+                        <th className="px-4 py-3 text-center font-semibold text-sm border-r border-green-500">Status</th>
+                        <th className="px-4 py-3 text-center font-semibold text-sm">Usia (bulan)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {[
+                        { label: 'Tengkurap', name: 'perkembangan_anak.tengkurap_ya', ageName: 'perkembangan_anak.tengkurap_usia' },
+                        { label: 'Berguling', name: 'perkembangan_anak.berguling_ya', ageName: 'perkembangan_anak.berguling_usia' },
+                        { label: 'Duduk', name: 'perkembangan_anak.duduk_ya', ageName: 'perkembangan_anak.duduk_usia' },
+                        { label: 'Merayap', name: 'perkembangan_anak.merayap_ya', ageName: 'perkembangan_anak.merayap_usia' },
+                        { label: 'Merangkak', name: 'perkembangan_anak.merangkak_ya', ageName: 'perkembangan_anak.merangkak_usia' },
+                        { label: 'Jongkok', name: 'perkembangan_anak.jongkok_ya', ageName: 'perkembangan_anak.jongkok_usia' },
+                        { label: 'Transisi Berdiri', name: 'perkembangan_anak.transisi_berdiri_ya', ageName: 'perkembangan_anak.transisi_berdiri_usia' },
+                        { label: 'Berdiri Tanpa Pegangan', name: 'perkembangan_anak.berdiri_tanpa_pegangan_ya', ageName: 'perkembangan_anak.berdiri_tanpa_pegangan_usia' },
+                        { label: 'Berjalan Tanpa Pegangan', name: 'perkembangan_anak.berjalan_tanpa_pegangan_ya', ageName: 'perkembangan_anak.berjalan_tanpa_pegangan_usia' },
+                        { label: 'Berlari', name: 'perkembangan_anak.berlari_ya', ageName: 'perkembangan_anak.berlari_usia' },
+                        { label: 'Melompat', name: 'perkembangan_anak.melompat_ya', ageName: 'perkembangan_anak.melompat_usia' },
+                      ].map((field, index) => (
+                        <tr key={field.name} className={`border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                          <td className="px-4 py-3 border-r border-gray-200">
+                            <span className="font-medium text-gray-900">{field.label}</span>
+                          </td>
+                          <td className="px-4 py-3 border-r border-gray-200 text-center">
+                            <div className="flex items-center justify-center">
+                              <input 
+                                type="checkbox" 
+                                name={field.name} 
+                                checked={!!(anakData.perkembangan_anak as any)[field.name.split('.')[1]]} 
+                                onChange={handleChange} 
+                                className="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
+                              />
+                              <span className="ml-2 text-sm text-gray-600">
+                                {!!(anakData.perkembangan_anak as any)[field.name.split('.')[1]] ? 'Sudah' : 'Belum'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <input 
+                              type="text" 
+                              name={field.ageName} 
+                              value={(anakData.perkembangan_anak as any)[field.ageName.split('.')[1]] || ''} 
+                              onChange={handleChange} 
+                              className="w-20 px-2 py-1 text-center border border-gray-300 rounded text-sm"
+                              placeholder="Usia"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Tabel Perkembangan Bicara & Bahasa */}
+                <div className="overflow-x-auto mb-6">
+                  <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                    <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-500">Perkembangan Bicara & Bahasa</th>
+                        <th className="px-4 py-3 text-center font-semibold text-sm border-r border-blue-500">Status</th>
+                        <th className="px-4 py-3 text-center font-semibold text-sm">Usia (bulan)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {[
+                        { label: 'Reflek Vokalisasi', name: 'perkembangan_anak.reflek_vokalisasi_ya', ageName: 'perkembangan_anak.reflek_vokalisasi_usia' },
+                        { label: 'Bubbling', name: 'perkembangan_anak.bubbling_ya', ageName: 'perkembangan_anak.bubbling_usia' },
+                        { label: 'Lalling', name: 'perkembangan_anak.lalling_ya', ageName: 'perkembangan_anak.lalling_usia' },
+                        { label: 'Echolalia', name: 'perkembangan_anak.echolalia_ya', ageName: 'perkembangan_anak.echolalia_usia' },
+                        { label: 'True Speech', name: 'perkembangan_anak.true_speech_ya', ageName: 'perkembangan_anak.true_speech_usia' },
+                        { label: 'Mengucapkan 1 Kata', name: 'perkembangan_anak.mengucapkan_1_kata_ya', ageName: 'perkembangan_anak.mengucapkan_1_kata_usia' },
+                        { label: 'Ungkap Keinginan 2 Kata', name: 'perkembangan_anak.ungkap_keinginan_2_kata_ya', ageName: 'perkembangan_anak.ungkap_keinginan_2_kata_usia' },
+                        { label: 'Bercerita', name: 'perkembangan_anak.bercerita_ya', ageName: 'perkembangan_anak.bercerita_usia' },
+                      ].map((field, index) => (
+                        <tr key={field.name} className={`border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                          <td className="px-4 py-3 border-r border-gray-200">
+                            <span className="font-medium text-gray-900">{field.label}</span>
+                          </td>
+                          <td className="px-4 py-3 border-r border-gray-200 text-center">
+                            <div className="flex items-center justify-center">
+                              <input 
+                                type="checkbox" 
+                                name={field.name} 
+                                checked={!!(anakData.perkembangan_anak as any)[field.name.split('.')[1]]} 
+                                onChange={handleChange} 
+                                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                              />
+                              <span className="ml-2 text-sm text-gray-600">
+                                {!!(anakData.perkembangan_anak as any)[field.name.split('.')[1]] ? 'Sudah' : 'Belum'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <input 
+                              type="text" 
+                              name={field.ageName} 
+                              value={(anakData.perkembangan_anak as any)[field.ageName.split('.')[1]] || ''} 
+                              onChange={handleChange} 
+                              className="w-20 px-2 py-1 text-center border border-gray-300 rounded text-sm"
+                              placeholder="Usia"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Tabel Perkembangan Sosial */}
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden">
+                    <thead className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold text-sm border-r border-purple-500">Perkembangan Sosial</th>
+                        <th className="px-4 py-3 text-center font-semibold text-sm border-r border-purple-500">Status</th>
+                        <th className="px-4 py-3 text-center font-semibold text-sm">Usia (bulan)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {[
+                        { label: 'Tertarik Lingkungan Luar', name: 'perkembangan_anak.tertarik_lingkungan_luar_ya', ageName: 'perkembangan_anak.tertarik_lingkungan_luar_usia' },
+                        { label: 'Mampu Digendong Siapapun', name: 'perkembangan_anak.digendong_siapapun_ya', ageName: 'perkembangan_anak.digendong_siapapun_usia' },
+                        { label: 'Mampu Interaksi Timbal Balik', name: 'perkembangan_anak.interaksi_timbal_balik_ya', ageName: 'perkembangan_anak.interaksi_timbal_balik_usia' },
+                        { label: 'Mampu Komunikasi Ekspresi Ibu', name: 'perkembangan_anak.komunikasi_ekspresi_ibu_ya', ageName: 'perkembangan_anak.komunikasi_ekspresi_ibu_usia' },
+                        { label: 'Mampu Mengekspresikan Emosi', name: 'perkembangan_anak.ekspresi_emosi_ya', ageName: 'perkembangan_anak.ekspresi_emosi_usia' },
+                      ].map((field, index) => (
+                        <tr key={field.name} className={`border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                          <td className="px-4 py-3 border-r border-gray-200">
+                            <span className="font-medium text-gray-900">{field.label}</span>
+                          </td>
+                          <td className="px-4 py-3 border-r border-gray-200 text-center">
+                            <div className="flex items-center justify-center">
+                              <input 
+                                type="checkbox" 
+                                name={field.name} 
+                                checked={!!(anakData.perkembangan_anak as any)[field.name.split('.')[1]]} 
+                                onChange={handleChange} 
+                                className="w-5 h-5 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                              />
+                              <span className="ml-2 text-sm text-gray-600">
+                                {!!(anakData.perkembangan_anak as any)[field.name.split('.')[1]] ? 'Sudah' : 'Belum'}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <input 
+                              type="text" 
+                              name={field.ageName} 
+                              value={(anakData.perkembangan_anak as any)[field.ageName.split('.')[1]] || ''} 
+                              onChange={handleChange} 
+                              className="w-20 px-2 py-1 text-center border border-gray-300 rounded text-sm"
+                              placeholder="Usia"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
               {/* Perilaku Oral Motor */}
@@ -2510,6 +2691,47 @@ const AnakAddForm: React.FC = () => {
                         <button
                           type="button"
                           onClick={addPerilakuOrangLebihTuaTag}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-blue-500 transition-colors duration-200"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[220px] flex-shrink-0">Perilaku Bertemu Orang Lebih Muda</label>
+                    <div className="w-full">
+                      {perilakuOrangLebihMudaTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {perilakuOrangLebihMudaTags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-800 text-sm font-medium rounded-full hover:bg-blue-100 transition-colors duration-200"
+                            >
+                              {tag.text}
+                              <button
+                                onClick={() => removePerilakuOrangLebihMudaTag(index)}
+                                className="ml-1 text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                type="button"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={perilakuOrangLebihMudaInput}
+                          onChange={e => setPerilakuOrangLebihMudaInput(e.target.value)}
+                          onKeyPress={handlePerilakuOrangLebihMudaKeyPress}
+                          placeholder="Tambah perilaku bertemu orang lebih muda dan tekan Enter atau klik tombol +"
+                          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm placeholder-gray-400 bg-white shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={addPerilakuOrangLebihMudaTag}
                           className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-blue-500 transition-colors duration-200"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2964,4 +3186,4 @@ const AnakAddForm: React.FC = () => {
   );
 };
 
-export default AnakAddForm;
+export default AnakEditForm;

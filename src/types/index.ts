@@ -594,6 +594,7 @@ export interface PerkembanganSosial {
   perilaku_bertemu_orang_baru: string;
   perilaku_bertemu_teman_sebaya: string;
   perilaku_bertemu_orang_lebih_tua: string;
+  perilaku_bertemu_orang_lebih_muda: string;
   bermain_dengan_banyak_anak: string;
   keterangan_lainnya: string;
 }
