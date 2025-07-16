@@ -32,6 +32,8 @@ import type {
 } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
+console.log('[API] BASE URL yang digunakan:', API_CONFIG.getApiBaseURL());
+
 const api = axios.create({
   baseURL: API_CONFIG.getApiBaseURL(),
   timeout: 10000,
