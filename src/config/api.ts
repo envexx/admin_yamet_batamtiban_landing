@@ -1,7 +1,7 @@
 // API Configuration for different environments
 export const API_CONFIG = {
-  // Production API URL
-  PRODUCTION_API_URL: 'https://api.yametbatamtiban.id/api/',
+  // Ambil dari env jika ada, fallback ke default lama
+  PRODUCTION_API_URL: import.meta.env.NEXT_PUBLIC_API_URL || 'https://api.yametbatamtiban.id/api/',
   
   // Development API URL (proxy to local backend)
   DEVELOPMENT_API_URL: '/api',
@@ -12,16 +12,18 @@ export const API_CONFIG = {
   
   // Get current API base URL based on environment
   getApiBaseURL: (): string => {
+    // Jika ada env, pakai env
+    if (import.meta.env.NEXT_PUBLIC_API_URL) {
+      return import.meta.env.NEXT_PUBLIC_API_URL;
+    }
     // Check if we're in production by hostname
     if (window.location.hostname === 'admin.yametbatamtiban.id') {
       return API_CONFIG.PRODUCTION_API_URL;
     }
-    
     // Check if we're in development
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return API_CONFIG.DEVELOPMENT_API_URL;
     }
-    
     // Default to development for other cases
     return API_CONFIG.DEVELOPMENT_API_URL;
   },
