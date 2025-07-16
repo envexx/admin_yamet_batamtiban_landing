@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       apiBase = 'http://localhost:3000';
     } else {
-      apiBase = apiBase.replace(/\/api$/, '');
+      apiBase = apiBase.replace(/\/api\/?$/, '');
     }
     return apiBase + '/uploads/logo/' + logoFileName;
   };
