@@ -91,7 +91,7 @@ const SettingAplikasiPage: React.FC = () => {
         setForm(res.data.data);
         setLogoFile(null);
         setLogoPreview(null);
-        window.location.reload(); // reload page setelah update setting
+        // window.location.reload(); // jangan reload otomatis, biarkan user lihat debug
       } else {
         setError(res.data?.message || 'Gagal menyimpan konfigurasi.');
       }
