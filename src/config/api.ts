@@ -1,8 +1,5 @@
 // API Configuration for different environments
 export const API_CONFIG = {
-  // Ambil dari env jika ada, fallback ke default lama
-  PRODUCTION_API_URL: import.meta.env.NEXT_PUBLIC_API_URL || 'https://api.yametbatamtiban.id/api/',
-  
   // Development API URL (proxy to local backend)
   DEVELOPMENT_API_URL: '/api',
   
@@ -12,19 +9,38 @@ export const API_CONFIG = {
   
   // Get current API base URL based on environment
   getApiBaseURL: (): string => {
-    // Jika ada env, pakai env
+    console.log('[DEBUG] import.meta.env.NEXT_PUBLIC_API_URL:', import.meta.env.NEXT_PUBLIC_API_URL);
+    console.log('[DEBUG] window.location.hostname:', window.location.hostname);
+    
+    // Jika ada env, pakai env (prioritas tertinggi)
     if (import.meta.env.NEXT_PUBLIC_API_URL) {
+      console.log('[DEBUG] Menggunakan env:', import.meta.env.NEXT_PUBLIC_API_URL);
       return import.meta.env.NEXT_PUBLIC_API_URL;
     }
-    // Check if we're in production by hostname
-    if (window.location.hostname === 'admin.yametbatamtiban.id') {
-      return API_CONFIG.PRODUCTION_API_URL;
+    
+    // Auto-detect berdasarkan hostname
+    const hostname = window.location.hostname;
+    
+    // Domain baru
+    if (hostname === 'admin.yametbatuaji.id') {
+      console.log('[DEBUG] Auto-detect: domain baru');
+      return 'https://api.yametbatuaji.id/api/';
     }
-    // Check if we're in development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    
+    // Domain lama
+    if (hostname === 'admin.yametbatamtiban.id') {
+      console.log('[DEBUG] Auto-detect: domain lama');
+      return 'https://api.yametbatamtiban.id/api/';
+    }
+    
+    // Development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      console.log('[DEBUG] Auto-detect: development');
       return API_CONFIG.DEVELOPMENT_API_URL;
     }
-    // Default to development for other cases
+    
+    // Fallback untuk domain lain
+    console.log('[DEBUG] Auto-detect: fallback ke development');
     return API_CONFIG.DEVELOPMENT_API_URL;
   },
   
@@ -38,7 +54,7 @@ export const API_CONFIG = {
   
   // Check if we're in production
   isProduction: (): boolean => {
-    return window.location.hostname === 'admin.yametbatamtiban.id';
+    return window.location.hostname === 'admin.yametbatamtiban.id' || window.location.hostname === 'admin.yametbatuaji.id';
   },
   
   // Check if we're in development
