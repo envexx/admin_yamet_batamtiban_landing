@@ -30,6 +30,7 @@ import type {
   CreateProgramTerapiData,
   UpdateProgramTerapiData
 } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 const api = axios.create({
   baseURL: API_CONFIG.getApiBaseURL(),
@@ -67,7 +68,7 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  login: async (credentials: { email: string; password: string }): Promise<ApiResponse<{ token: string; user: User }>> => {
+  login: async (credentials: { email: string; password: string }): Promise<ApiResponse<{ accessToken: string; user: User }>> => {
     const response = await api.post('/auth/login', credentials);
     return response.data;
   },

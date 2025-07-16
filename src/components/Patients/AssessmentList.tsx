@@ -49,7 +49,6 @@ const AssessmentList: React.FC = () => {
         sortOrder: sortOrder.toUpperCase() 
       };
       const response = await anakAPI.getAllAssessmentGlobal(params);
-      
       if (response.status === 'success' && response.data) {
         setData(response.data);
         setPagination(response.pagination || null);
@@ -57,7 +56,6 @@ const AssessmentList: React.FC = () => {
         setError(response.message || 'Gagal memuat data assessment');
       }
     } catch (err: any) {
-      console.error('Error fetching assessments:', err);
       setError(err.message || 'Gagal memuat data assessment');
     } finally {
       setLoading(false);
@@ -80,6 +78,10 @@ const AssessmentList: React.FC = () => {
   };
 
   const handleEditAssessment = (assessment: Assessment) => {
+    if (!assessment.anak_id || isNaN(Number(assessment.anak_id))) {
+      setError('ID tidak valid');
+      return;
+    }
     setSelected(assessment);
     setEditForm({
       assessment_date: assessment.assessment_date ? assessment.assessment_date.split('T')[0] : '',
@@ -91,8 +93,10 @@ const AssessmentList: React.FC = () => {
   };
 
   const handleUpdateAssessment = async () => {
-    if (!selected) return;
-    
+    if (!selected || !selected.anak_id || isNaN(Number(selected.anak_id))) {
+      setError('ID tidak valid');
+      return;
+    }
     try {
       const response = await anakAPI.updateAssessment(selected.anak_id, selected.id, editForm);
       if (response.status === 'success') {
@@ -113,6 +117,10 @@ const AssessmentList: React.FC = () => {
   };
 
   const handleAddAssessment = (anakId: number) => {
+    if (!anakId || isNaN(Number(anakId))) {
+      setError('ID tidak valid');
+      return;
+    }
     setSelectedAnakId(anakId);
     setAddForm({
       assessment_date: '',
@@ -124,8 +132,10 @@ const AssessmentList: React.FC = () => {
   };
 
   const handleCreateAssessment = async () => {
-    if (!selectedAnakId) return;
-    
+    if (!selectedAnakId || isNaN(Number(selectedAnakId))) {
+      setError('ID tidak valid');
+      return;
+    }
     try {
       const response = await anakAPI.createAssessment(selectedAnakId, addForm);
       if (response.status === 'success') {
@@ -146,12 +156,13 @@ const AssessmentList: React.FC = () => {
   };
 
   const handleDeleteAssessment = async () => {
-    if (!selected) return;
-    
+    if (!selected || !selected.anak_id || isNaN(Number(selected.anak_id))) {
+      setError('ID tidak valid');
+      return;
+    }
     if (!confirm('Apakah Anda yakin ingin menghapus assessment ini?')) {
       return;
     }
-    
     try {
       const response = await anakAPI.deleteAssessment(selected.anak_id, selected.id);
       if (response.status === 'success') {
@@ -435,12 +446,12 @@ const AssessmentList: React.FC = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Hasil Assessment
               </label>
-              <input
-                type="text"
+              <textarea
                 value={editForm.assessment_result}
                 onChange={e => setEditForm(prev => ({ ...prev, assessment_result: e.target.value }))}
-                placeholder="Contoh: Baik, Sedang, Perlu Perhatian"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Masukkan hasil assessment secara detail..."
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
               />
             </div>
             
@@ -550,12 +561,12 @@ const AssessmentList: React.FC = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Hasil Assessment
               </label>
-              <input
-                type="text"
+              <textarea
                 value={addForm.assessment_result}
                 onChange={e => setAddForm(prev => ({ ...prev, assessment_result: e.target.value }))}
-                placeholder="Contoh: Baik, Sedang, Perlu Perhatian"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Masukkan hasil assessment secara detail..."
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
               />
             </div>
             

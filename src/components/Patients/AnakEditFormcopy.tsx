@@ -804,12 +804,8 @@ const AnakEditForm: React.FC = () => {
   }, [anakData.nomor_anak]);
 
   useEffect(() => {
-    // ... existing code ...
     // Mapping jenis_kelamin jika value dari backend adalah 'LAKI_LAKI' atau 'PEREMPUAN'
-    setAnakData(prev => ({
-      ...prev,
-      jenis_kelamin: prev.jenis_kelamin === 'LAKI_LAKI' ? 'laki_laki' : prev.jenis_kelamin === 'PEREMPUAN' ? 'perempuan' : prev.jenis_kelamin
-    }));
+    // Tidak perlu mapping ke huruf kecil, biarkan tetap 'LAKI_LAKI' atau 'PEREMPUAN'
   }, [/* dependencies sesuai useEffect aslinya */]);
 
   // Handler untuk komponen tanggal
@@ -949,8 +945,8 @@ const AnakEditForm: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
                   <select name="jenis_kelamin" value={anakData.jenis_kelamin || ''} onChange={handleChange} className="w-full px-2 py-1 border rounded">
                     <option value="">Pilih jenis kelamin</option>
-                    <option value="laki_laki">Laki-laki</option>
-                    <option value="perempuan">Perempuan</option>
+                    <option value="LAKI_LAKI">Laki-laki</option>
+                    <option value="PEREMPUAN">Perempuan</option>
                   </select>
                 </div>
                 <div>

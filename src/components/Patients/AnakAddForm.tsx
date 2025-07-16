@@ -566,7 +566,7 @@ const AnakAddForm: React.FC = () => {
   const navigate = useNavigate();
   const [anakData, setAnakData] = useState<AnakDetail>({
     ...defaultAnakDetail,
-    jenis_kelamin: 'laki_laki', // enum string sesuai tipe
+    jenis_kelamin: 'LAKI_LAKI', // enum string sesuai tipe
     ayah: {
       ...defaultAnakDetail.ayah,
       usia: 0,

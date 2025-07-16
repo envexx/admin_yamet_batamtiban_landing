@@ -38,11 +38,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setToken(storedToken);
             const parsedUser = JSON.parse(storedUser);
             setUser(parsedUser);
-            
             // Verify token is still valid
             await authAPI.getProfile();
           } catch (error) {
-            console.error('Token validation failed:', error);
             // Token is invalid, clear storage
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -51,7 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
         // Clear any corrupted data
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -61,7 +58,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
       }
     };
-
     initAuth();
   }, []);
 
@@ -70,17 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await authAPI.login(credentials);
       if (response.data) {
         const { token: newToken, user: newUser } = response.data;
-        
         localStorage.setItem('token', newToken);
         localStorage.setItem('user', JSON.stringify(newUser));
-        
         setToken(newToken);
         setUser(newUser);
       } else {
         throw new Error('Login response missing data');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
       throw new Error(error.response?.data?.message || 'Login failed');
     }
   };
@@ -93,14 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = (userData: Partial<User>) => {
-    // console.log('Updating user with data:', userData); // Debug log
     if (user) {
       const updatedUser = { ...user, ...userData };
-              // console.log('Updated user object:', updatedUser); // Debug log
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
-    } else {
-              // console.warn('No user found when trying to update'); // Debug log
     }
   };
 
