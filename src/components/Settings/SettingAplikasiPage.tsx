@@ -105,15 +105,14 @@ const SettingAplikasiPage: React.FC = () => {
 
   // Fungsi bantu untuk memastikan logoUrl absolut
   const getAbsoluteLogoUrl = (logoFileName: string) => {
-    if (!logoFileName) return '';
-    if (logoFileName.startsWith('http')) return logoFileName;
+    if (!logoFileName) return '/default-logo.png';
     let apiBase = API_CONFIG.getApiBaseURL();
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      apiBase = 'http://localhost:3000';
+      apiBase = 'http://localhost:3000/api';
     } else {
-      apiBase = apiBase.replace(/\/api\/?$/, '');
+      apiBase = apiBase.replace(/\/api\/?$/, '/api');
     }
-    return apiBase + '/uploads/logo/' + logoFileName;
+    return `${apiBase}/file/logo/${logoFileName}`;
   };
 
   return (
@@ -140,9 +139,9 @@ const SettingAplikasiPage: React.FC = () => {
             className="mb-2"
             disabled={uploading}
           />
-          {(logoPreview || form.logoUrl) && (
+          {(logoPreview || form.logoUrl) ? (
             <img src={logoPreview || getAbsoluteLogoUrl(form.logoUrl)} alt="Logo Preview" className="h-16 mt-2" />
-          )}
+          ) : null}
         </div>
         <div>
           <label className="block font-medium mb-1">Skema Warna (Hex)</label>

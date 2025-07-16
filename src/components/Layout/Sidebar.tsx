@@ -32,15 +32,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
   const { appName, logoUrl, colorSchema } = useAppConfig();
 
   const getAbsoluteLogoUrl = (logoFileName: string) => {
-    if (!logoFileName) return '';
-    if (logoFileName.startsWith('http')) return logoFileName;
+    if (!logoFileName) return '/default-logo.png';
     let apiBase = API_CONFIG.getApiBaseURL();
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      apiBase = 'http://localhost:3000';
+      apiBase = 'http://localhost:3000/api';
     } else {
-      apiBase = apiBase.replace(/\/api\/?$/, '');
+      apiBase = apiBase.replace(/\/api\/?$/, '/api');
     }
-    return apiBase + '/uploads/logo/' + logoFileName;
+    return `${apiBase}/file/logo/${logoFileName}`;
   };
 
   // Untuk close dropdown saat klik di luar
@@ -165,12 +164,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
             <>
               <div className="flex items-center justify-center">
                 {logoUrl ? (
-                  (() => { const absUrl = getAbsoluteLogoUrl(logoUrl); console.log('[Sidebar] Logo URL:', absUrl); return (
-                    <img src={absUrl} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" style={{ background: colorSchema }} />
-                  ); })()
+                  <img src={getAbsoluteLogoUrl(logoUrl)} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" style={{ background: colorSchema }} />
                 ) : (
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colorSchema }}>
-                    <span className="text-white font-bold text-sm">{appName?.[0] || 'A'}</span>
+                    <span className="text-white font-bold text-sm">{appName?.[0] || 'Y'}</span>
                   </div>
                 )}
               </div>
@@ -186,12 +183,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
             <>
               <div className="flex items-center space-x-3">
                 {logoUrl ? (
-                  (() => { const absUrl = getAbsoluteLogoUrl(logoUrl); console.log('[Sidebar] Logo URL:', absUrl); return (
-                    <img src={absUrl} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" style={{ background: colorSchema }} />
-                  ); })()
+                  <img src={getAbsoluteLogoUrl(logoUrl)} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" style={{ background: colorSchema }} />
                 ) : (
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colorSchema }}>
-                    <span className="text-white font-bold text-sm">{appName?.[0] || 'A'}</span>
+                    <span className="text-white font-bold text-sm">{appName?.[0] || 'Y'}</span>
                   </div>
                 )}
                 <h1 className="text-xl font-bold text-black">{appName || 'Aplikasi'}</h1>
