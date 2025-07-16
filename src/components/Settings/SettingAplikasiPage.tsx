@@ -62,9 +62,12 @@ const SettingAplikasiPage: React.FC = () => {
     setLoading(true);
     let logoUrl = form.logoUrl;
     try {
+      console.log('[SettingAplikasi] Mulai proses submit. Data form:', form);
       // Jika user memilih file logo baru, upload dulu
       if (logoFile) {
+        console.log('[SettingAplikasi] Upload logo file:', logoFile.name);
         const res = await uploadAppLogo(logoFile);
+        console.log('[SettingAplikasi] Response upload logo:', res.data);
         if (res.data && res.data.status === 'success' && res.data.url) {
           // Ambil hanya nama file dari url
           const urlParts = res.data.url.split('/');
@@ -81,9 +84,10 @@ const SettingAplikasiPage: React.FC = () => {
         logoUrl,
         colorSchema: form.colorSchema,
       };
-      console.log('[SettingAplikasi] Data yang dikirim ke backend:', dataToSend);
+      console.log('[SettingAplikasi] Data yang dikirim ke backend (PUT):', dataToSend);
       // Simpan konfigurasi
       const res = await updateAppConfig(dataToSend);
+      console.log('[SettingAplikasi] Response PUT:', res.data);
       if (res.data && res.data.status === 'success') {
         setSuccess('Konfigurasi aplikasi berhasil disimpan.');
         setForm(res.data.data);
@@ -94,6 +98,7 @@ const SettingAplikasiPage: React.FC = () => {
         setError(res.data?.message || 'Gagal menyimpan konfigurasi.');
       }
     } catch (err: any) {
+      console.error('[SettingAplikasi] Error saat submit:', err);
       setError(err.response?.data?.message || 'Gagal menyimpan konfigurasi.');
     } finally {
       setLoading(false);
