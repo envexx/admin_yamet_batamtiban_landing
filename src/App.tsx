@@ -20,6 +20,8 @@ import TerapisList from './components/Users/TerapisList';
 import ChatbotBubble from './components/ChatbotBubble';
 import NotFoundPage from './components/NotFoundPage';
 import ServerErrorPage from './components/ServerErrorPage';
+import SettingAplikasiPage from './components/Settings/SettingAplikasiPage';
+import { AppConfigProvider } from './contexts/AppConfigContext';
 
 // ErrorBoundary untuk menangkap error 500
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
@@ -58,6 +60,7 @@ const Dashboard: React.FC = () => {
     if (path === '/users') return 'users';
     if (path === '/profile') return 'profile';
     if (path === '/terapis') return 'terapis';
+    if (path === '/setting-aplikasi') return 'setting-aplikasi';
     return 'dashboard';
   };
 
@@ -86,6 +89,9 @@ const Dashboard: React.FC = () => {
       case 'terapis':
         navigate('/terapis');
         break;
+      case 'setting-aplikasi':
+        navigate('/setting-aplikasi');
+        break;
       default:
         navigate('/dashboard');
     }
@@ -107,6 +113,8 @@ const Dashboard: React.FC = () => {
         return 'Profil Saya';
       case 'terapis':
         return 'Manajemen Terapis';
+      case 'setting-aplikasi':
+        return 'Pengaturan Aplikasi';
       default:
         return 'Dashboard';
     }
@@ -128,6 +136,8 @@ const Dashboard: React.FC = () => {
         return 'Kelola informasi profil Anda';
       case 'terapis':
         return 'Kelola data terapis dan informasi jadwal';
+      case 'setting-aplikasi':
+        return 'Kelola pengaturan aplikasi dan konfigurasi sistem';
       default:
         return '';
     }
@@ -170,6 +180,7 @@ const Dashboard: React.FC = () => {
                 <TerapisList />
               </ProtectedRoute>
             } />
+            <Route path="/setting-aplikasi" element={<SettingAplikasiPage />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
@@ -209,19 +220,21 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ErrorBoundary>
-          <Routes>
-            <Route path="/register" element={<RegisterForm />} />
-            {/* Route root: redirect tergantung status login */}
-            <Route path="/" element={<RootRedirect />} />
-            <Route path="*" element={<AppContent />} />
-            <Route path="/404" element={<NotFoundPage />} />
-          </Routes>
-        </ErrorBoundary>
-      </AuthProvider>
-    </Router>
+    <AppConfigProvider>
+      <Router>
+        <AuthProvider>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/register" element={<RegisterForm />} />
+              {/* Route root: redirect tergantung status login */}
+              <Route path="/" element={<RootRedirect />} />
+              <Route path="*" element={<AppContent />} />
+              <Route path="/404" element={<NotFoundPage />} />
+            </Routes>
+          </ErrorBoundary>
+        </AuthProvider>
+      </Router>
+    </AppConfigProvider>
   );
 }
 

@@ -13,6 +13,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAppConfig } from '../../contexts/AppConfigContext';
+import API_CONFIG from '../../config/api';
 
 interface SidebarProps {
   activeTab: string;
@@ -27,6 +29,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = React.useState(false);
+  const { appName, logoUrl, colorSchema } = useAppConfig();
+
+  const getAbsoluteLogoUrl = (logoFileName: string) => {
+    if (!logoFileName) return '';
+    if (logoFileName.startsWith('http')) return logoFileName;
+    let apiBase = API_CONFIG.getApiBaseURL();
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      apiBase = 'http://localhost:3000';
+    } else {
+      apiBase = apiBase.replace(/\/api$/, '');
+    }
+    return apiBase + '/uploads/logo/' + logoFileName;
+  };
 
   // Untuk close dropdown saat klik di luar
   const profileDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -57,6 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
     { id: 'assessment', label: 'Assessment', icon: FileText, path: '/assessment', roles: ['ADMIN', 'SUPERADMIN'] },
     { id: 'program-terapi', label: 'Program Terapi', icon: Activity, path: '/program-terapi', roles: ['ADMIN', 'SUPERADMIN'] },
     { id: 'users', label: 'Pengguna', icon: UserPlus, path: '/users', roles: ['SUPERADMIN'] },
+    { id: 'setting-aplikasi', label: 'Setting Aplikasi', icon: Settings, path: '/setting-aplikasi', roles: ['SUPERADMIN'] },
   ];
 
   // Show loading state if auth is still loading
@@ -148,9 +164,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
           {isCollapsed ? (
             <>
               <div className="flex items-center justify-center">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">Y</span>
-                </div>
+                {logoUrl ? (
+                  (() => { const absUrl = getAbsoluteLogoUrl(logoUrl); console.log('[Sidebar] Logo URL:', absUrl); return (
+                    <img src={absUrl} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" style={{ background: colorSchema }} />
+                  ); })()
+                ) : (
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colorSchema }}>
+                    <span className="text-white font-bold text-sm">{appName?.[0] || 'A'}</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
@@ -160,13 +182,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
                 <ChevronRight className="w-4 h-4 text-gray-600" />
               </button>
             </>
-          ) : (
+          ) :
             <>
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">Y</span>
-                </div>
-                <h1 className="text-xl font-bold text-gray-900">YAMET</h1>
+                {logoUrl ? (
+                  (() => { const absUrl = getAbsoluteLogoUrl(logoUrl); console.log('[Sidebar] Logo URL:', absUrl); return (
+                    <img src={absUrl} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white" style={{ background: colorSchema }} />
+                  ); })()
+                ) : (
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: colorSchema }}>
+                    <span className="text-white font-bold text-sm">{appName?.[0] || 'A'}</span>
+                  </div>
+                )}
+                <h1 className="text-xl font-bold text-black">{appName || 'Aplikasi'}</h1>
               </div>
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
@@ -176,7 +204,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
                 <ChevronLeft className="w-4 h-4 text-gray-600" />
               </button>
             </>
-          )}
+          }
         </div>
         {/* Navigation */}
         <nav className={`flex-1 flex flex-col justify-between ${isCollapsed ? 'px-2 py-6' : 'px-4 py-6'}`}>
@@ -193,9 +221,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, sidebarOpen,
                         isCollapsed ? 'justify-center px-3 py-3' : 'space-x-3 px-3 py-2.5'
                       } ${
                         isActive(item.path)
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                          ? '' // akan diganti style inline
                           : 'text-gray-700 hover:bg-gray-50'
                       }`}
+                      style={
+                        isActive(item.path)
+                          ? {
+                              background: colorSchema + '20', // 20 = 12% opacity
+                              color: colorSchema,
+                              borderRight: `2px solid ${colorSchema}`
+                            }
+                          : undefined
+                      }
                       title={isCollapsed ? item.label : undefined}
                     >
                       <IconComponent className="w-5 h-5" />

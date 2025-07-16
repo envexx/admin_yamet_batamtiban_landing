@@ -342,7 +342,7 @@ export const anakAPI = {
     return response.data;
   },
   
-  updatePerkembangan: async (anakId: number, perkembanganData: Partial<PerkembanganData>): Promise<ApiResponse<PerkembanganData>> => {
+  updatePerkembangan: async (anakId: number, perkembanganData: Partial<PerkembanganData>) => {
     const response = await api.put(`/anak/${anakId}/perkembangan`, perkembanganData);
     return response.data;
   },
@@ -504,6 +504,22 @@ export const programTerapiAPI = {
     const response = await api.delete(`/anak/${anakId}/program-terapi`, { params: { programId } });
     return response.data;
   },
+};
+
+export const getAppConfig = async () => {
+  return api.get('/setting-aplikasi');
+};
+
+export const updateAppConfig = async (data: { appName: string; logoUrl: string; colorSchema: string }) => {
+  return api.put('/setting-aplikasi', data);
+};
+
+export const uploadAppLogo = async (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/setting-aplikasi/upload-logo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 };
 
 export default api;
