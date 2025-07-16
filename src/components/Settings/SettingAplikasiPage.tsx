@@ -68,10 +68,8 @@ const SettingAplikasiPage: React.FC = () => {
         console.log('[SettingAplikasi] Upload logo file:', logoFile.name);
         const res = await uploadAppLogo(logoFile);
         console.log('[SettingAplikasi] Response upload logo:', res.data);
-        if (res.data && res.data.status === 'success' && res.data.url) {
-          // Ambil hanya nama file dari url
-          const urlParts = res.data.url.split('/');
-          logoUrl = urlParts[urlParts.length - 1];
+        if (res.data && res.data.status === 'success' && res.data.filename) {
+          logoUrl = res.data.filename;
         } else {
           setError(res.data?.message || 'Gagal upload logo.');
           setLoading(false);
