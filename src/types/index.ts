@@ -833,12 +833,24 @@ export interface DashboardStats {
   total_anak: number;
   total_admin?: number;
   total_terapis?: number;
+  total_manajer?: number;
+  total_orangtua?: number;
   anak_keluar_bulan_lalu?: number;
   anak_keluar_bulan_ini?: number;
   anak_aktif?: number;
   growth: Array<{ period: string; count: number }>;
   period?: string;
   filter_applied?: string;
+  
+  // Admin Input Stats (SUPERADMIN, MANAJER)
+  admin_input_stats?: AdminInputStatsDetail[];
+  
+  // Normalized Data (SUPERADMIN, MANAJER, ADMIN)
+  normalized_data?: {
+    keluhan: NormalizedData;
+    sumber_informasi: NormalizedData;
+  };
+  
   insight?: {
     top_keluhan?: (string | { keluhan: string; count: number })[];
     age_distribution?: { '<2': number; '2-4': number; '4-6': number; '>6': number };
@@ -846,6 +858,48 @@ export interface DashboardStats {
     therapy_success_count?: number;
     avg_therapy_duration_month?: number;
     geographic?: Record<string, number>;
+  };
+}
+
+// Admin Input Stats Detail
+export interface AdminInputStatsDetail {
+  admin_id: number;
+  admin_name: string;
+  admin_email: string;
+  total_input: number;
+  detail: {
+    anak: number;
+    penilaian: number;
+    program_terapi: number;
+    jadwal_terapi: number;
+    sesi_terapi: number;
+    ebook: number;
+    kursus: number;
+  };
+}
+
+// Normalized Data Structure
+export interface NormalizedData {
+  raw_data: Array<{ [key: string]: any; count: number }>;
+  normalized_data: Array<{
+    original: string;
+    normalized: string;
+    count: number;
+  }>;
+  formatted: string;
+  summary: {
+    total_unique_keluhan?: number;
+    total_normalized_keluhan?: number;
+    total_unique_sumber?: number;
+    total_normalized_sumber?: number;
+    top_keluhan?: {
+      normalized: string;
+      count: number;
+    };
+    top_sumber?: {
+      normalized: string;
+      count: number;
+    };
   };
 }
 
@@ -927,4 +981,22 @@ export interface UpdateProgramTerapiData {
   end_date?: string;
   status?: 'AKTIF' | 'SELESAI' | 'DIBATALKAN';
   jam_per_minggu?: number | null;
+}
+
+// Admin Stats Types
+export interface AdminStats {
+  period: string;
+  filter_applied: string;
+  total_admin: number;
+  total_input_from_all_admins: number;
+  admin_list: AdminInputStats[];
+}
+
+export interface AdminInputStats {
+  admin_name: string;
+  total_input: number;
+}
+
+export interface AdminStatsFilters {
+  period?: 'all' | '1month' | '4month' | '6month' | '1year';
 }

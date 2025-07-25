@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnakDetail } from '../../types';
 import Button from '../UI/Button';
@@ -6,6 +6,62 @@ import LoadingSpinner from '../UI/LoadingSpinner';
 import { anakAPI } from '../../services/api';
 import { useModalAlert } from '../UI/ModalAlertContext';
 import { WithContext as ReactTagInput, Tag } from 'react-tag-input';
+
+// Auto-save functionality
+const AUTO_SAVE_KEY = 'anak_add_form_draft';
+const AUTO_SAVE_DELAY = 2000; // 2 seconds
+
+// Debounce function
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Auto-save hook
+function useAutoSave<T>(data: T, key: string, delay: number = AUTO_SAVE_DELAY) {
+  const debouncedData = useDebounce(data, delay);
+
+  useEffect(() => {
+    if (debouncedData) {
+      try {
+        localStorage.setItem(key, JSON.stringify(debouncedData));
+      } catch (error) {
+        console.warn('Failed to save draft:', error);
+      }
+    }
+  }, [debouncedData, key]);
+
+  const loadDraft = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.warn('Failed to load draft:', error);
+      return null;
+    }
+  }, [key]);
+
+  const clearDraft = useCallback(() => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn('Failed to clear draft:', error);
+    }
+  }, [key]);
+
+  return { loadDraft, clearDraft };
+}
 
 function formatDateInput(dateString?: string | null) {
   if (!dateString) return '';
@@ -564,31 +620,79 @@ function cleanDataForAPI(data: typeof defaultAnakDetail) {
 
 const AnakAddForm: React.FC = () => {
   const navigate = useNavigate();
-  const [anakData, setAnakData] = useState<AnakDetail>({
-    ...defaultAnakDetail,
-    jenis_kelamin: 'LAKI_LAKI', // enum string sesuai tipe
-    ayah: {
-      ...defaultAnakDetail.ayah,
-      usia: 0,
-      anak_ke: 0,
-      pernikahan_ke: 0,
-      usia_saat_menikah: 0,
-      tahun_meninggal: null,
-      usia_saat_meninggal: null,
-    },
-    ibu: {
-      ...defaultAnakDetail.ibu,
-      usia: 0,
-      anak_ke: 0,
-      pernikahan_ke: 0,
-      usia_saat_menikah: 0,
-      tahun_meninggal: null,
-      usia_saat_meninggal: null,
-    },
+  const { showAlert } = useModalAlert();
+  
+  // Initialize form data with draft or default
+  const [anakData, setAnakData] = useState<AnakDetail>(() => {
+    // Try to load draft first
+    try {
+      const saved = localStorage.getItem(AUTO_SAVE_KEY);
+      if (saved) {
+        const draft = JSON.parse(saved);
+        return {
+          ...defaultAnakDetail,
+          ...draft,
+          jenis_kelamin: draft.jenis_kelamin || 'laki_laki',
+          ayah: {
+            ...defaultAnakDetail.ayah,
+            ...draft.ayah,
+            usia: draft.ayah?.usia || 0,
+            anak_ke: draft.ayah?.anak_ke || 0,
+            pernikahan_ke: draft.ayah?.pernikahan_ke || 0,
+            usia_saat_menikah: draft.ayah?.usia_saat_menikah || 0,
+            tahun_meninggal: draft.ayah?.tahun_meninggal || null,
+            usia_saat_meninggal: draft.ayah?.usia_saat_meninggal || null,
+          },
+          ibu: {
+            ...defaultAnakDetail.ibu,
+            ...draft.ibu,
+            usia: draft.ibu?.usia || 0,
+            anak_ke: draft.ibu?.anak_ke || 0,
+            pernikahan_ke: draft.ibu?.pernikahan_ke || 0,
+            usia_saat_menikah: draft.ibu?.usia_saat_menikah || 0,
+            tahun_meninggal: draft.ibu?.tahun_meninggal || null,
+            usia_saat_meninggal: draft.ibu?.usia_saat_meninggal || null,
+          },
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to load draft:', error);
+    }
+    
+    // Return default if no draft
+    return {
+      ...defaultAnakDetail,
+      jenis_kelamin: 'laki_laki',
+      ayah: {
+        ...defaultAnakDetail.ayah,
+        usia: 0,
+        anak_ke: 0,
+        pernikahan_ke: 0,
+        usia_saat_menikah: 0,
+        tahun_meninggal: null,
+        usia_saat_meninggal: null,
+      },
+      ibu: {
+        ...defaultAnakDetail.ibu,
+        usia: 0,
+        anak_ke: 0,
+        pernikahan_ke: 0,
+        usia_saat_menikah: 0,
+        tahun_meninggal: null,
+        usia_saat_meninggal: null,
+      },
+    };
   });
+
+  // Auto-save functionality
+  const { loadDraft, clearDraft } = useAutoSave(anakData, AUTO_SAVE_KEY);
+  
+  // Loading states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatingNumber, setGeneratingNumber] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
   // State untuk file lampiran
   const [lampiranFiles, setLampiranFiles] = useState<{ [key: string]: File | null }>({
     hasil_eeg_url: null,
@@ -631,12 +735,16 @@ const AnakAddForm: React.FC = () => {
     parseDateComponents(anakData.mulai_cuti)
   );
 
-  const { showAlert } = useModalAlert();
-
   // State tambahan untuk tag input
-  const [keluhanOrtuTags, setKeluhanOrtuTags] = useState<{ id: string, text: string, className: string }[]>(() => (anakData.survey_awal.keluhan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
-  const [tindakanOrtuTags, setTindakanOrtuTags] = useState<{ id: string, text: string, className: string }[]>(() => (anakData.survey_awal.tindakan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
-  const [kendalaTags, setKendalaTags] = useState<{ id: string, text: string, className: string }[]>(() => (anakData.survey_awal.kendala || []).map((t, i) => ({ id: String(i), text: t, className: '' })));
+  const [keluhanOrtuTags, setKeluhanOrtuTags] = useState<{ id: string, text: string, className: string }[]>(() => 
+    (anakData.survey_awal.keluhan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' }))
+  );
+  const [tindakanOrtuTags, setTindakanOrtuTags] = useState<{ id: string, text: string, className: string }[]>(() => 
+    (anakData.survey_awal.tindakan_orang_tua || []).map((t, i) => ({ id: String(i), text: t, className: '' }))
+  );
+  const [kendalaTags, setKendalaTags] = useState<{ id: string, text: string, className: string }[]>(() => 
+    (anakData.survey_awal.kendala || []).map((t, i) => ({ id: String(i), text: t, className: '' }))
+  );
 
   // State untuk tag input array
   const [pantanganMakananTags, setPantanganMakananTags] = useState<{ id: string, text: string }[]>([]);
@@ -647,10 +755,25 @@ const AnakAddForm: React.FC = () => {
   const [perilakuOrangBaruTags, setPerilakuOrangBaruTags] = useState<{ id: string, text: string }[]>([]);
   const [perilakuTemanSebayaTags, setPerilakuTemanSebayaTags] = useState<{ id: string, text: string }[]>([]);
   const [perilakuOrangLebihTuaTags, setPerilakuOrangLebihTuaTags] = useState<{ id: string, text: string }[]>([]);
-  const [perilakuOrangLebihMudaTags, setPerilakuOrangLebihMudaTags] = useState<{ id: string, text: string }[]>([]); // baru
-  const [perilakuBertemuTemanSebayaTags, setPerilakuBertemuTemanSebayaTags] = useState<{ id: string, text: string }[]>([]); // baru
+  const [perilakuOrangLebihMudaTags, setPerilakuOrangLebihMudaTags] = useState<{ id: string, text: string }[]>([]);
+  const [perilakuBertemuTemanSebayaTags, setPerilakuBertemuTemanSebayaTags] = useState<{ id: string, text: string }[]>([]);
   const [bermainDenganBanyakAnakTags, setBermainDenganBanyakAnakTags] = useState<{ id: string, text: string }[]>([]);
   const [perkembanganSosialKeteranganTags, setPerkembanganSosialKeteranganTags] = useState<{ id: string, text: string }[]>([]);
+
+  // State untuk menyimpan id anak setelah submit
+  const [createdAnakId, setCreatedAnakId] = useState<number | null>(null);
+
+  // Show draft loaded notification
+  useEffect(() => {
+    const saved = localStorage.getItem(AUTO_SAVE_KEY);
+    if (saved) {
+      showAlert({ 
+        type: 'info', 
+        title: 'Draft Ditemukan', 
+        message: 'Data draft sebelumnya telah dimuat. Anda dapat melanjutkan mengisi form.' 
+      });
+    }
+  }, [showAlert]);
 
   // Fungsi untuk menghitung usia berdasarkan tanggal lahir
   const calculateAge = (birthDate: string): number => {
@@ -856,9 +979,6 @@ const AnakAddForm: React.FC = () => {
     });
   };
 
-  // State untuk menyimpan id anak setelah submit
-  const [createdAnakId, setCreatedAnakId] = useState<number | null>(null);
-
   // Refactor handleLampiranChange agar upload langsung jika sudah ada anakId
   const handleLampiranChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files } = e.target;
@@ -983,6 +1103,43 @@ const AnakAddForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validasi field wajib
+    const requiredFields = [
+      { field: 'full_name', label: 'Nama Lengkap' },
+      { field: 'nick_name', label: 'Nama Panggilan' },
+      { field: 'birth_date', label: 'Tanggal Lahir' },
+      { field: 'birth_place', label: 'Tempat Lahir' },
+      { field: 'jenis_kelamin', label: 'Jenis Kelamin' },
+      { field: 'kewarganegaraan', label: 'Kewarganegaraan' },
+      { field: 'agama', label: 'Agama' },
+      { field: 'anak_ke', label: 'Anak Ke' }
+    ];
+
+    // Cek field wajib
+    for (const { field, label } of requiredFields) {
+      let value;
+      
+      if (field === 'birth_date') {
+        // Validasi khusus untuk tanggal lahir
+        const combinedDate = combineDateComponents(birthDateComponents.day, birthDateComponents.month, birthDateComponents.year);
+        value = combinedDate;
+      } else {
+        value = field.includes('.') 
+          ? field.split('.').reduce((obj, key) => obj?.[key], anakData)
+          : anakData[field as keyof typeof anakData];
+      }
+      
+      if (!value || (typeof value === 'string' && value.trim() === '') || value === 'Pilih agama' || value === 'Pilih jenis kelamin' || value === 'Pilih kewarganegaraan') {
+        showAlert({ 
+          type: 'error', 
+          title: 'Validasi', 
+          message: `${label} wajib diisi!` 
+        });
+        return;
+      }
+    }
+
     // Validasi enum wajib pilih
     if (!anakData.riwayat_kelahiran.jenis_kelahiran) {
       showAlert({ type: 'error', title: 'Validasi', message: 'Jenis kelahiran wajib dipilih!' });
@@ -996,32 +1153,39 @@ const AnakAddForm: React.FC = () => {
       showAlert({ type: 'error', title: 'Validasi', message: 'Penolong persalinan wajib dipilih!' });
       return;
     }
+    
     setLoading(true);
     setError(null);
+    setIsSaving(true);
+    
     try {
       // Bersihkan data sebelum dikirim
       const cleanedData = cleanDataForAPI(anakData);
-      // Log data yang dikirim ke backend
-              // console.log('[FRONTEND] Data yang dikirim ke backend:', cleanedData);
+      
       // 1. Buat data anak
       const res = await anakAPI.create(cleanedData);
       const anakId = res.data?.id;
       setCreatedAnakId(anakId || null);
-      // 2. Upload lampiran jika ada file (langsung, sama seperti Edit Form)
+      
+      // 2. Upload lampiran jika ada file
       if (anakId) {
         for (const [key, file] of Object.entries(lampiranFiles)) {
           if (file) {
-        const formData = new FormData();
+            const formData = new FormData();
             formData.append(key, file);
             try {
-          await anakAPI.uploadLampiran(anakId, formData);
+              await anakAPI.uploadLampiran(anakId, formData);
               showAlert({ type: 'success', title: 'Lampiran', message: `File ${file.name} berhasil diupload!` });
             } catch (err: any) {
               showAlert({ type: 'error', title: 'Lampiran', message: `Gagal upload file ${file.name}` });
+            }
+          }
         }
       }
-        }
-      }
+      
+      // Clear draft after successful submission
+      clearDraft();
+      
       navigate('/anak');
       showAlert({ type: 'success', title: 'Berhasil', message: 'Data berhasil ditambahkan!' });
     } catch (err: any) {
@@ -1047,6 +1211,48 @@ const AnakAddForm: React.FC = () => {
       });
     } finally {
       setLoading(false);
+      setIsSaving(false);
+    }
+  };
+
+  // Function to clear form and draft
+  const handleClearForm = () => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus semua data yang telah diisi?')) {
+      setAnakData({
+        ...defaultAnakDetail,
+        jenis_kelamin: 'laki_laki',
+        ayah: {
+          ...defaultAnakDetail.ayah,
+          usia: 0,
+          anak_ke: 0,
+          pernikahan_ke: 0,
+          usia_saat_menikah: 0,
+          tahun_meninggal: null,
+          usia_saat_meninggal: null,
+        },
+        ibu: {
+          ...defaultAnakDetail.ibu,
+          usia: 0,
+          anak_ke: 0,
+          pernikahan_ke: 0,
+          usia_saat_menikah: 0,
+          tahun_meninggal: null,
+          usia_saat_meninggal: null,
+        },
+      });
+      clearDraft();
+      showAlert({ type: 'success', title: 'Berhasil', message: 'Form telah dibersihkan!' });
+    }
+  };
+
+  // Function to restore draft
+  const handleRestoreDraft = () => {
+    const draft = loadDraft();
+    if (draft) {
+      setAnakData(draft);
+      showAlert({ type: 'success', title: 'Berhasil', message: 'Draft telah dipulihkan!' });
+    } else {
+      showAlert({ type: 'info', title: 'Info', message: 'Tidak ada draft yang tersimpan.' });
     }
   };
 
@@ -1485,8 +1691,41 @@ const AnakAddForm: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-6">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-gray-900">Tambah Data Anak</h1>
+              {/* Auto-save status indicator */}
+              <div className="flex items-center gap-2">
+                {isSaving ? (
+                  <div className="flex items-center gap-1 text-blue-600">
+                    <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm font-medium">Menyimpan...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-green-600">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6L9 17l-5-5"/>
+                    </svg>
+                    <span className="text-sm font-medium">Tersimpan</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="mt-2 sm:mt-0">
+            <div className="flex items-center gap-2">
+              {/* Help buttons */}
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={handleRestoreDraft}
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                Pulihkan Draft
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={handleClearForm}
+                className="text-red-600 border-red-600 hover:bg-red-50"
+              >
+                Bersihkan Form
+              </Button>
               <Button variant="secondary" size="sm" onClick={() => navigate(-1)}>
                 Kembali
               </Button>
@@ -1511,6 +1750,22 @@ const AnakAddForm: React.FC = () => {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Required fields info */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-blue-800 mb-1">Informasi Field Wajib</h3>
+              <p className="text-sm text-blue-700">
+                Field yang ditandai dengan <span className="text-red-500 font-bold">*</span> adalah wajib diisi. 
+                Pastikan semua field wajib telah diisi sebelum menyimpan data.
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <form onSubmit={handleSubmit} className="space-y-8 pb-8 pr-2">
           {/* Tab 1: Data Anak, Data Orang Tua, Survey Awal */}
           {activeTab === 0 && (
@@ -1670,15 +1925,37 @@ const AnakAddForm: React.FC = () => {
                 <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6">Data Anak</h2>
                 <div className="space-y-4">
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Nama Lengkap</label>
-                    <input type="text" name="full_name" value={anakData.full_name} onChange={handleChange} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base" placeholder="Masukkan nama lengkap..." />
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">
+                      Nama Lengkap <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      name="full_name" 
+                      value={anakData.full_name} 
+                      onChange={handleChange} 
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base" 
+                      placeholder="Masukkan nama lengkap..." 
+                      required
+                    />
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Nama Panggilan</label>
-                    <input type="text" name="nick_name" value={anakData.nick_name} onChange={handleChange} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base" placeholder="Masukkan nama panggilan..." />
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">
+                      Nama Panggilan <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      name="nick_name" 
+                      value={anakData.nick_name} 
+                      onChange={handleChange} 
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base" 
+                      placeholder="Masukkan nama panggilan..." 
+                      required
+                    />
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Tanggal Lahir</label>
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">
+                      Tanggal Lahir <span className="text-red-500">*</span>
+                    </label>
                     <DateDropdown
                       day={birthDateComponents.day}
                       month={birthDateComponents.month}
@@ -1689,28 +1966,62 @@ const AnakAddForm: React.FC = () => {
                     />
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Tempat Lahir</label>
-                    <input type="text" name="birth_place" value={anakData.birth_place} onChange={handleChange} className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base" placeholder="Masukkan tempat lahir..." />
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">
+                      Tempat Lahir <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      name="birth_place" 
+                      value={anakData.birth_place} 
+                      onChange={handleChange} 
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-sm md:text-base" 
+                      placeholder="Masukkan tempat lahir..." 
+                      required
+                    />
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Jenis Kelamin</label>
-                    <select name="jenis_kelamin" value={anakData.jenis_kelamin || ''} onChange={handleChange} className="w-full px-2 py-1 border rounded">
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">
+                      Jenis Kelamin <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      name="jenis_kelamin" 
+                      value={anakData.jenis_kelamin || ''} 
+                      onChange={handleChange} 
+                      className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
                       <option value="">Pilih jenis kelamin</option>
                       <option value="LAKI_LAKI">Laki-laki</option>
                       <option value="PEREMPUAN">Perempuan</option>
                     </select>
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Kewarganegaraan</label>
-                    <select name="kewarganegaraan" value={anakData.kewarganegaraan} onChange={handleChange} className="w-full px-2 py-1 border rounded">
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">
+                      Kewarganegaraan <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      name="kewarganegaraan" 
+                      value={anakData.kewarganegaraan} 
+                      onChange={handleChange} 
+                      className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
                       <option value="">Pilih kewarganegaraan</option>
                       <option value="Indonesia">Indonesia</option>
                       <option value="WNA">WNA</option>
                     </select>
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Agama</label>
-                    <select name="agama" value={anakData.agama} onChange={handleChange} className="w-full px-2 py-1 border rounded">
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">
+                      Agama <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      name="agama" 
+                      value={anakData.agama} 
+                      onChange={handleChange} 
+                      className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
                       <option value="">Pilih agama</option>
                       <option value="Islam">Islam</option>
                       <option value="Kristen">Kristen</option>
@@ -1721,8 +2032,17 @@ const AnakAddForm: React.FC = () => {
                     </select>
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Anak Ke</label>
-                    <input type="number" name="anak_ke" value={anakData.anak_ke} onChange={handleChange} className="w-full px-2 py-1 border rounded" />
+                    <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">
+                      Anak Ke <span className="text-red-500">*</span>
+                    </label>
+                    <input 
+                      type="number" 
+                      name="anak_ke" 
+                      value={anakData.anak_ke} 
+                      onChange={handleChange} 
+                      className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                      required
+                    />
                   </div>
                   <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                     <label className="text-sm md:text-base font-medium text-gray-700 min-w-0 md:min-w-[200px] flex-shrink-0">Sekolah/Kelas</label>
@@ -3205,10 +3525,46 @@ const AnakAddForm: React.FC = () => {
                 </div>
               </div>
               {/* Submit Button */}
-              <div className="flex justify-end">
-                <Button type="submit" variant="primary" size="lg">
-                  Simpan Data Anak
-                </Button>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50 p-6 rounded-lg border">
+                <div className="flex items-center gap-4">
+                  {error && (
+                    <div className="text-red-600 text-sm">
+                      <strong>Error:</strong> {error}
+                    </div>
+                  )}
+                  {loading && (
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <LoadingSpinner size="sm" />
+                      <span className="text-sm">Menyimpan data...</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    size="lg"
+                    onClick={() => navigate(-1)}
+                    disabled={loading}
+                  >
+                    Batal
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    variant="primary" 
+                    size="lg"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <LoadingSpinner size="sm" />
+                        Menyimpan...
+                      </div>
+                    ) : (
+                      'Simpan Data Anak'
+                    )}
+                  </Button>
+                </div>
               </div>
             </>
           )}

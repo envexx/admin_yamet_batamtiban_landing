@@ -28,7 +28,9 @@ import type {
   ProgramTerapiGroupedResponse,
   ProgramTerapiResponse,
   CreateProgramTerapiData,
-  UpdateProgramTerapiData
+  UpdateProgramTerapiData,
+  AdminStats,
+  AdminStatsFilters
 } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -125,7 +127,7 @@ export const authAPI = {
 
 // Dashboard API
 export const dashboardAPI = {
-  getStats: async (period: string = '1month'): Promise<ApiResponse<DashboardStats>> => {
+  getStats: async (period: string = 'all'): Promise<ApiResponse<DashboardStats>> => {
     const response = await api.get('/dashboard/stats', { params: { period } });
     return response.data;
   },
@@ -522,6 +524,18 @@ export const uploadAppLogo = async (file: File) => {
   return api.post('/setting-aplikasi/upload-logo', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+};
+
+// Admin Stats API
+export const adminStatsAPI = {
+  // Get admin simple stats (for SUPERADMIN and MANAJER only)
+  getAdminStats: async (filters?: AdminStatsFilters): Promise<ApiResponse<AdminStats>> => {
+    const queryParams = new URLSearchParams();
+    if (filters?.period) queryParams.append('period', filters.period);
+    
+    const response = await api.get(`/dashboard/admin-simple-stats?${queryParams}`);
+    return response.data;
+  },
 };
 
 export default api;

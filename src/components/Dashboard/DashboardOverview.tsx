@@ -1,17 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardAPI } from '../../services/api';
-import { DashboardStats } from '../../types';
+import { DashboardStats, NormalizedData } from '../../types';
 import StatsCard from './StatsCard';
-import { Users, UserCheck, UserPlus, TrendingUp, BarChart2, LogOut, RefreshCw } from 'lucide-react';
+import NormalizedDataCard from './NormalizedDataCard';
+import { Users, UserCheck, UserPlus, TrendingUp, BarChart2, LogOut, RefreshCw, AlertCircle, Info } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { useAuth } from '../../contexts/AuthContext';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 const DashboardOverview: React.FC = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [period, setPeriod] = useState<string>('1month');
+  const [period, setPeriod] = useState<string>('all');
+
+  // Check user role for conditional rendering
+  const roleName = typeof user?.role === 'string'
+    ? user.role
+    : user?.role?.name || user?.peran;
+
+  const canViewAdminStats = roleName === 'SUPERADMIN' || roleName === 'MANAJER';
+  const canViewNormalizedData = roleName === 'SUPERADMIN' || roleName === 'MANAJER' || roleName === 'ADMIN';
 
   useEffect(() => {
     fetchStats();
@@ -36,6 +47,64 @@ const DashboardOverview: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Component untuk menampilkan admin input stats
+  const AdminInputStatsWidget: React.FC = () => {
+    if (!stats?.admin_input_stats || !canViewAdminStats) return null;
+
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+          <UserPlus className="w-5 h-5 text-purple-600" />
+          Statistik Inputan Admin
+        </h3>
+        
+        <div className="space-y-4">
+          {stats.admin_input_stats.map((admin, index) => (
+            <div key={admin.admin_id} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-purple-600">
+                      {admin.admin_name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{admin.admin_name}</div>
+                    <div className="text-sm text-gray-500">{admin.admin_email}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-purple-600">{admin.total_input}</div>
+                  <div className="text-sm text-gray-500">Total Input</div>
+                </div>
+              </div>
+              
+              {/* Detail Breakdown */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="text-center p-2 bg-blue-50 rounded">
+                  <div className="text-sm font-medium text-blue-600">Anak</div>
+                  <div className="text-lg font-bold text-blue-900">{admin.detail.anak}</div>
+                </div>
+                <div className="text-center p-2 bg-green-50 rounded">
+                  <div className="text-sm font-medium text-green-600">Penilaian</div>
+                  <div className="text-lg font-bold text-green-900">{admin.detail.penilaian}</div>
+                </div>
+                <div className="text-center p-2 bg-yellow-50 rounded">
+                  <div className="text-sm font-medium text-yellow-600">Program</div>
+                  <div className="text-lg font-bold text-yellow-900">{admin.detail.program_terapi}</div>
+                </div>
+                <div className="text-center p-2 bg-red-50 rounded">
+                  <div className="text-sm font-medium text-red-600">Jadwal</div>
+                  <div className="text-lg font-bold text-red-900">{admin.detail.jadwal_terapi}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -92,6 +161,7 @@ const DashboardOverview: React.FC = () => {
               value={period}
               onChange={e => setPeriod(e.target.value)}
             >
+              <option value="month">1 Bulan Terakhir</option>
               <option value="1month">1 Bulan Terakhir</option>
               <option value="4month">4 Bulan Terakhir</option>
               <option value="6month">6 Bulan Terakhir</option>
@@ -120,6 +190,12 @@ const DashboardOverview: React.FC = () => {
         )}
         {typeof stats.total_admin !== 'undefined' && (
           <StatsCard title="Total Admin" value={stats.total_admin} icon={UserPlus} color="purple" />
+        )}
+        {typeof stats.total_manajer !== 'undefined' && (
+          <StatsCard title="Total Manajer" value={stats.total_manajer} icon={UserPlus} color="indigo" />
+        )}
+        {typeof stats.total_orangtua !== 'undefined' && (
+          <StatsCard title="Total Orang Tua" value={stats.total_orangtua} icon={Users} color="teal" />
         )}
       </div>
 
@@ -198,47 +274,30 @@ const DashboardOverview: React.FC = () => {
         )}
       </div>
 
-      {/* Insight Section */}
-      {stats.insight && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Keluhan */}
-          {stats.insight.top_keluhan && stats.insight.top_keluhan.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-blue-900 mb-4">Top Keluhan</h3>
-              <div className="space-y-3">
-                {stats.insight.top_keluhan.map((keluhan: any, i: number) => {
-                  const keluhanText = typeof keluhan === 'string' ? keluhan : keluhan.keluhan || 'Unknown';
-                  const keluhanCount = typeof keluhan === 'object' ? keluhan.count : null;
-                  
-                  return (
-                    <div key={i} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                      <span className="font-medium">{keluhanText}</span>
-                      <span className="text-blue-600 font-semibold">
-                        {keluhanCount ? `${keluhanCount} kasus` : `#${i + 1}`}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+      {/* Normalized Data Section */}
+      {canViewNormalizedData && stats.normalized_data && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {stats.normalized_data.keluhan && (
+            <NormalizedDataCard
+              title="Keluhan (Normalisasi)"
+              data={stats.normalized_data.keluhan}
+              type="keluhan"
+            />
           )}
-
-                    {/* Sumber */}
-          {stats.insight.referral_source && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-green-900 mb-4">Sumber</h3>
-              <div className="space-y-3">
-                {Object.entries(stats.insight.referral_source).map(([source, count]) => (
-                  <div key={source} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="font-medium">{source}</span>
-                    <span className="text-green-600 font-semibold">{count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {stats.normalized_data.sumber_informasi && (
+            <NormalizedDataCard
+              title="Sumber Informasi (Normalisasi)"
+              data={stats.normalized_data.sumber_informasi}
+              type="sumber"
+            />
           )}
         </div>
       )}
+
+      {/* Admin Input Stats Section */}
+      <div className="mb-8">
+        <AdminInputStatsWidget />
+      </div>
 
       {/* Geographic Distribution */}
       {stats.insight?.geographic && Object.keys(stats.insight.geographic).length > 0 && (
@@ -279,6 +338,13 @@ const DashboardOverview: React.FC = () => {
               <h3 className="text-lg font-semibold text-green-600 mb-4">Terapi Berhasil</h3>
               <div className="text-4xl font-bold text-green-600 mb-2">{stats.insight.therapy_success_count}</div>
               <p className="text-gray-600">Anak yang lulus terapi</p>
+            </div>
+          )}
+          {typeof stats.insight.avg_therapy_duration_month !== 'undefined' && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-lg font-semibold text-blue-600 mb-4">Rata-rata Durasi Terapi</h3>
+              <div className="text-4xl font-bold text-blue-600 mb-2">{stats.insight.avg_therapy_duration_month}</div>
+              <p className="text-gray-600">Bulan per anak</p>
             </div>
           )}
         </div>
