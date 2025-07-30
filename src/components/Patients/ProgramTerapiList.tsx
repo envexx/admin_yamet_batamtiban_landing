@@ -4,6 +4,7 @@ import { AnakWithProgramTerapi, CreateProgramTerapiData, UpdateProgramTerapiData
 import Button from '../UI/Button';
 import LoadingSpinner from '../UI/LoadingSpinner';
 import Modal from '../UI/Modal';
+import { useModalAlert } from '../UI/ModalAlertContext';
 
 const ProgramTerapiList: React.FC = () => {
   const [data, setData] = useState<AnakWithProgramTerapi[]>([]);
@@ -18,6 +19,8 @@ const ProgramTerapiList: React.FC = () => {
   // Modal states
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteData, setDeleteData] = useState<{ anakId: number; programId: number } | null>(null);
   const [selectedAnakId, setSelectedAnakId] = useState<number | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
   const [addForm, setAddForm] = useState<CreateProgramTerapiData>({
@@ -37,6 +40,10 @@ const ProgramTerapiList: React.FC = () => {
     jam_per_minggu: 0
   });
 
+  const { showAlert } = useModalAlert();
+
+
+
   const fetchProgramTerapi = async () => {
     setLoading(true);
     setError(null);
@@ -55,7 +62,7 @@ const ProgramTerapiList: React.FC = () => {
         setPagination(response.pagination);
       }
     } catch (err: any) {
-      setError(err.message || 'Gagal memuat data program terapi');
+      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal memuat data program terapi' });
     } finally {
       setLoading(false);
     }
@@ -81,6 +88,10 @@ const ProgramTerapiList: React.FC = () => {
   };
 
   const handleAddProgram = (anakId: number) => {
+    if (!anakId || isNaN(Number(anakId))) {
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'ID tidak valid' });
+      return;
+    }
     setSelectedAnakId(anakId);
     setAddForm({
       program_name: '',
@@ -107,7 +118,10 @@ const ProgramTerapiList: React.FC = () => {
   };
 
   const handleCreateProgram = async () => {
-    if (!selectedAnakId) return;
+    if (!selectedAnakId) {
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'ID tidak valid' });
+      return;
+    }
     
     try {
       const payload = { ...addForm, jam_per_minggu: Number(addForm.jam_per_minggu) };
@@ -124,15 +138,18 @@ const ProgramTerapiList: React.FC = () => {
           jam_per_minggu: 0
         });
         fetchProgramTerapi();
-        alert('Program terapi berhasil dibuat');
+        showAlert({ type: 'success', title: 'Berhasil', message: 'Program terapi berhasil dibuat' });
       }
     } catch (err: any) {
-      alert(err.message || 'Gagal membuat program terapi');
+      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal membuat program terapi' });
     }
   };
 
   const handleUpdateProgram = async () => {
-    if (!selectedProgram) return;
+    if (!selectedProgram) {
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'Data program tidak valid' });
+      return;
+    }
     
     try {
       const payload = { ...editForm, jam_per_minggu: Number(editForm.jam_per_minggu) };
@@ -149,27 +166,42 @@ const ProgramTerapiList: React.FC = () => {
           jam_per_minggu: 0
         });
         fetchProgramTerapi();
-        alert('Program terapi berhasil diperbarui');
+        showAlert({ type: 'success', title: 'Berhasil', message: 'Program terapi berhasil diperbarui' });
       }
     } catch (err: any) {
-      alert(err.message || 'Gagal memperbarui program terapi');
+      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal memperbarui program terapi' });
     }
   };
 
   const handleDeleteProgram = async (anakId: number, programId: number) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus program terapi ini?')) {
+    if (!anakId || !programId) {
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'ID tidak valid' });
       return;
     }
+    setDeleteData({ anakId, programId });
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteProgram = async () => {
+    if (!deleteData) return;
     
     try {
-      const response = await programTerapiAPI.delete(anakId, programId);
+      const response = await programTerapiAPI.delete(deleteData.anakId, deleteData.programId);
       if (response.status === 'success') {
         fetchProgramTerapi();
-        alert('Program terapi berhasil dihapus');
+        showAlert({ type: 'success', title: 'Berhasil', message: 'Program terapi berhasil dihapus' });
       }
     } catch (err: any) {
-      alert(err.message || 'Gagal menghapus program terapi');
+      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal menghapus program terapi' });
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeleteData(null);
     }
+  };
+
+  const cancelDeleteProgram = () => {
+    setShowDeleteConfirm(false);
+    setDeleteData(null);
   };
 
   const getStatusColor = (status: string) => {
@@ -294,9 +326,11 @@ const ProgramTerapiList: React.FC = () => {
                             onClick={() => handleEditProgram(program)}
                           >
                             <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
-                                {program.program_name}
-                              </h4>
+                              <div>
+                                <h4 className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                                  {program.program_name}
+                                </h4>
+                              </div>
                               <svg className="h-4 w-4 text-gray-400 group-hover:text-purple-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5l7 7-7 7" />
                               </svg>
@@ -423,24 +457,27 @@ const ProgramTerapiList: React.FC = () => {
         >
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Nama Program *
-                  </label>
-                  <select
-                    value={editForm.program_name}
-                    onChange={e => setEditForm(prev => ({ ...prev, program_name: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                    required
-                  >
-                    <option value="">Pilih jenis program terapi</option>
-                    <option value="BT">BT - Behavioral Therapy</option>
-                    <option value="OT">OT - Occupational Therapy</option>
-                    <option value="TW">TW - Terapi Wicara</option>
-                    <option value="SI">SI - Sensory Integration</option>
-                    <option value="CBT">CBT - Cognitive Behavioral Therapy</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Nama Program *
+                </label>
+                                 <select
+                   value={editForm.program_name}
+                   onChange={e => setEditForm(prev => ({ ...prev, program_name: e.target.value }))}
+                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                   required
+                 >
+                   <option value="">Pilih jenis program terapi</option>
+                   <option value="BT">BT - Behavioral Therapy</option>
+                   <option value="OT">OT - Occupational Therapy</option>
+                   <option value="TW">TW - Terapi Wicara</option>
+                   <option value="SI">SI - Sensory Integration</option>
+                   <option value="CBT">CBT - Cognitive Behavioral Therapy</option>
+                   <option value="NEUROSENSO">Neurosenso</option>
+                   <option value="HIDROTERAPI">Hidroterapi</option>
+                   <option value="FISIOTERAPI">Fisioterapi</option>
+                 </select>
+              </div>
               
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -457,6 +494,8 @@ const ProgramTerapiList: React.FC = () => {
                 </select>
               </div>
             </div>
+
+
             
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -567,38 +606,41 @@ const ProgramTerapiList: React.FC = () => {
           onClose={() => {
             setShowAddForm(false);
             setSelectedAnakId(null);
-            setAddForm({
-              program_name: '',
-              description: '',
-              start_date: '',
-              end_date: '',
-              status: 'AKTIF',
-              jam_per_minggu: 0
-            });
+                    setAddForm({
+          program_name: '',
+          description: '',
+          start_date: '',
+          end_date: '',
+          status: 'AKTIF',
+          jam_per_minggu: 0
+        });
           }} 
           title="Tambah Program Terapi Baru"
           size="lg"
         >
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Nama Program *
-                  </label>
-                  <select
-                    value={addForm.program_name}
-                    onChange={e => setAddForm(prev => ({ ...prev, program_name: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                    required
-                  >
-                    <option value="">Pilih jenis program terapi</option>
-                    <option value="BT">BT - Behavioral Therapy</option>
-                    <option value="OT">OT - Occupational Therapy</option>
-                    <option value="TW">TW - Terapi Wicara</option>
-                    <option value="SI">SI - Sensory Integration</option>
-                    <option value="CBT">CBT - Cognitive Behavioral Therapy</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Nama Program *
+                </label>
+                                 <select
+                   value={addForm.program_name}
+                   onChange={e => setAddForm(prev => ({ ...prev, program_name: e.target.value }))}
+                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                   required
+                 >
+                   <option value="">Pilih jenis program terapi</option>
+                   <option value="BT">BT - Behavioral Therapy</option>
+                   <option value="OT">OT - Occupational Therapy</option>
+                   <option value="TW">TW - Terapi Wicara</option>
+                   <option value="SI">SI - Sensory Integration</option>
+                   <option value="CBT">CBT - Cognitive Behavioral Therapy</option>
+                   <option value="NEUROSENSO">Neurosenso</option>
+                   <option value="HIDROTERAPI">Hidroterapi</option>
+                   <option value="FISIOTERAPI">Fisioterapi</option>
+                 </select>
+              </div>
               
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -615,6 +657,8 @@ const ProgramTerapiList: React.FC = () => {
                 </select>
               </div>
             </div>
+
+
             
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -697,6 +741,26 @@ const ProgramTerapiList: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 Buat Program
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          isOpen={showDeleteConfirm}
+          onClose={cancelDeleteProgram}
+          title="Konfirmasi Hapus Program Terapi"
+          size="sm"
+        >
+          <div className="space-y-4 text-center">
+            <p className="text-gray-800">Apakah Anda yakin ingin menghapus program terapi ini?</p>
+            <div className="flex justify-center gap-3">
+              <Button variant="danger" onClick={confirmDeleteProgram} className="px-6 py-3 text-sm font-medium">
+                Hapus
+              </Button>
+              <Button variant="secondary" onClick={cancelDeleteProgram} className="px-6 py-3 text-sm font-medium">
+                Batal
               </Button>
             </div>
           </div>

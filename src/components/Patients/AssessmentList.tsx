@@ -4,6 +4,7 @@ import { AnakWithAssessment, Assessment, AssessmentForm, Pagination } from '../.
 import LoadingSpinner from '../UI/LoadingSpinner';
 import Modal from '../UI/Modal';
 import Button from '../UI/Button';
+import { useModalAlert } from '../UI/ModalAlertContext';
 
 const AssessmentList: React.FC = () => {
   const [data, setData] = useState<AnakWithAssessment[]>([]);
@@ -13,6 +14,8 @@ const AssessmentList: React.FC = () => {
   const [selected, setSelected] = useState<Assessment | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteData, setDeleteData] = useState<{ anakId: number; assessmentId: number } | null>(null);
   const [selectedAnakId, setSelectedAnakId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<AssessmentForm>({
     assessment_date: '',
@@ -31,11 +34,18 @@ const AssessmentList: React.FC = () => {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const limit = 10;
+  const { showAlert } = useModalAlert();
 
   useEffect(() => {
     fetchAssessments();
     // eslint-disable-next-line
   }, [search, page, sortBy, sortOrder]);
+
+  useEffect(() => {
+    if (error) {
+      showAlert({ type: 'error', title: 'Gagal', message: error });
+    }
+  }, [error]);
 
   const fetchAssessments = async () => {
     setLoading(true);
@@ -79,7 +89,7 @@ const AssessmentList: React.FC = () => {
 
   const handleEditAssessment = (assessment: Assessment) => {
     if (!assessment.anak_id || isNaN(Number(assessment.anak_id))) {
-      setError('ID tidak valid');
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'ID tidak valid' });
       return;
     }
     setSelected(assessment);
@@ -94,7 +104,7 @@ const AssessmentList: React.FC = () => {
 
   const handleUpdateAssessment = async () => {
     if (!selected || !selected.anak_id || isNaN(Number(selected.anak_id))) {
-      setError('ID tidak valid');
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'ID tidak valid' });
       return;
     }
     try {
@@ -109,16 +119,16 @@ const AssessmentList: React.FC = () => {
           notes: ''
         });
         fetchAssessments(); // Refresh the list
-        alert('Assessment berhasil diperbarui');
+        showAlert({ type: 'success', title: 'Berhasil', message: 'Assessment berhasil diperbarui' });
       }
     } catch (err: any) {
-      alert(err.message || 'Gagal memperbarui assessment');
+      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal memperbarui assessment' });
     }
   };
 
   const handleAddAssessment = (anakId: number) => {
     if (!anakId || isNaN(Number(anakId))) {
-      setError('ID tidak valid');
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'ID tidak valid' });
       return;
     }
     setSelectedAnakId(anakId);
@@ -133,7 +143,7 @@ const AssessmentList: React.FC = () => {
 
   const handleCreateAssessment = async () => {
     if (!selectedAnakId || isNaN(Number(selectedAnakId))) {
-      setError('ID tidak valid');
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'ID tidak valid' });
       return;
     }
     try {
@@ -148,23 +158,27 @@ const AssessmentList: React.FC = () => {
           notes: ''
         });
         fetchAssessments(); // Refresh the list
-        alert('Assessment berhasil dibuat');
+        showAlert({ type: 'success', title: 'Berhasil', message: 'Assessment berhasil dibuat' });
       }
     } catch (err: any) {
-      alert(err.message || 'Gagal membuat assessment');
+      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal membuat assessment' });
     }
   };
 
   const handleDeleteAssessment = async () => {
     if (!selected || !selected.anak_id || isNaN(Number(selected.anak_id))) {
-      setError('ID tidak valid');
+      showAlert({ type: 'error', title: 'Data Tidak Valid', message: 'ID tidak valid' });
       return;
     }
-    if (!confirm('Apakah Anda yakin ingin menghapus assessment ini?')) {
-      return;
-    }
+    setDeleteData({ anakId: selected.anak_id, assessmentId: selected.id });
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAssessment = async () => {
+    if (!deleteData) return;
+    
     try {
-      const response = await anakAPI.deleteAssessment(selected.anak_id, selected.id);
+      const response = await anakAPI.deleteAssessment(deleteData.anakId, deleteData.assessmentId);
       if (response.status === 'success') {
         setShowEditForm(false);
         setSelected(null);
@@ -175,11 +189,19 @@ const AssessmentList: React.FC = () => {
           notes: ''
         });
         fetchAssessments(); // Refresh the list
-        alert('Assessment berhasil dihapus');
+        showAlert({ type: 'success', title: 'Berhasil', message: 'Assessment berhasil dihapus' });
       }
     } catch (err: any) {
-      alert(err.message || 'Gagal menghapus assessment');
+      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal menghapus assessment' });
+    } finally {
+      setShowDeleteConfirm(false);
+      setDeleteData(null);
     }
+  };
+
+  const cancelDeleteAssessment = () => {
+    setShowDeleteConfirm(false);
+    setDeleteData(null);
   };
 
   const getAssessmentResultColor = (result: string) => {
@@ -609,6 +631,26 @@ const AssessmentList: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 Buat Assessment
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Confirm Delete Modal */}
+        <Modal
+          isOpen={showDeleteConfirm}
+          onClose={cancelDeleteAssessment}
+          title="Konfirmasi Hapus Assessment"
+          size="sm"
+        >
+          <div className="space-y-4 text-center">
+            <p className="text-gray-800">Apakah Anda yakin ingin menghapus assessment ini?</p>
+            <div className="flex justify-center gap-3">
+              <Button variant="danger" onClick={confirmDeleteAssessment} className="px-6 py-3 text-sm font-medium">
+                Hapus
+              </Button>
+              <Button variant="secondary" onClick={cancelDeleteAssessment} className="px-6 py-3 text-sm font-medium">
+                Batal
               </Button>
             </div>
           </div>

@@ -3,14 +3,14 @@ import { DashboardStats } from '../../types';
 import StatsCard from './StatsCard';
 import NormalizedDataCard from './NormalizedDataCard';
 import MinimalCacheStatus from './MinimalCacheStatus';
-import { Users, UserCheck, UserPlus, TrendingUp, BarChart2, LogOut, RefreshCw, AlertCircle, Info } from 'lucide-react';
+import { Users, UserCheck, UserPlus, TrendingUp, BarChart2, LogOut, RefreshCw } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDashboardCache } from '../../contexts/DashboardCacheContext';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
-const DashboardOverview: React.FC = () => {
+const CleanDashboardOverview: React.FC = () => {
   const { user } = useAuth();
   const [period, setPeriod] = useState<string>('all');
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -220,7 +220,7 @@ const DashboardOverview: React.FC = () => {
         </div>
       </div>
 
-      {/* Background refresh indicator */}
+      {/* Background refresh indicator - minimal */}
       {isLoading && stats && (
         <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
           <div className="flex items-center gap-2 text-blue-800">
@@ -229,8 +229,6 @@ const DashboardOverview: React.FC = () => {
           </div>
         </div>
       )}
-
-
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -406,4 +404,4 @@ const DashboardOverview: React.FC = () => {
   );
 };
 
-export default DashboardOverview;
+export default CleanDashboardOverview; 

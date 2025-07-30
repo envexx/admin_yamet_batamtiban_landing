@@ -5,7 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import LoginForm from './components/Auth/LoginForm';
-import DashboardOverview from './components/Dashboard/DashboardOverview';
+import CleanDashboardOverview from './components/Dashboard/CleanDashboardOverview';
 import AnakList from './components/Patients/PatientList';
 import UserManagement from './components/Users/UserManagement';
 import ProfileSettings from './components/Profile/ProfileSettings';
@@ -22,6 +22,7 @@ import NotFoundPage from './components/NotFoundPage';
 import ServerErrorPage from './components/ServerErrorPage';
 import SettingAplikasiPage from './components/Settings/SettingAplikasiPage';
 import { AppConfigProvider } from './contexts/AppConfigContext';
+import { DashboardCacheProvider } from './contexts/DashboardCacheContext';
 
 // ErrorBoundary untuk menangkap error 500
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
@@ -152,7 +153,7 @@ const Dashboard: React.FC = () => {
           <Routes>
             <Route path="/dashboard" element={
               <ProtectedRoute requiredRole="ADMIN-OR-HIGHER">
-                <DashboardOverview />
+                <CleanDashboardOverview />
               </ProtectedRoute>
             } />
             <Route path="/anak" element={<AnakList />} />
@@ -223,15 +224,17 @@ function App() {
     <AppConfigProvider>
       <Router>
         <AuthProvider>
-          <ErrorBoundary>
-            <Routes>
-              <Route path="/register" element={<RegisterForm />} />
-              {/* Route root: redirect tergantung status login */}
-              <Route path="/" element={<RootRedirect />} />
-              <Route path="*" element={<AppContent />} />
-              <Route path="/404" element={<NotFoundPage />} />
-            </Routes>
-          </ErrorBoundary>
+          <DashboardCacheProvider>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/register" element={<RegisterForm />} />
+                {/* Route root: redirect tergantung status login */}
+                <Route path="/" element={<RootRedirect />} />
+                <Route path="*" element={<AppContent />} />
+                <Route path="/404" element={<NotFoundPage />} />
+              </Routes>
+            </ErrorBoundary>
+          </DashboardCacheProvider>
         </AuthProvider>
       </Router>
     </AppConfigProvider>
