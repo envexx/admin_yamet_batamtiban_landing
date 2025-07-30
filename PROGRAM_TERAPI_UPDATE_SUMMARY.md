@@ -188,11 +188,12 @@ export interface ProgramTerapi {
 5. **CBT - Cognitive Behavioral Therapy**
 6. **NEUROSENSO - Neurosenso**
 7. **HIDROTERAPI - Hidroterapi**
+8. **FISIOTERAPI - Fisioterapi**
 
 ## 🎯 **Alur Kerja Baru**
 
 ### **1. User Memilih Program**
-- User memilih program dari dropdown yang berisi 7 opsi program utama
+- User memilih program dari dropdown yang berisi 8 opsi program utama
 - Tidak ada lagi konsep sub-program
 - Semua program setara dan berdiri sendiri
 
@@ -210,11 +211,11 @@ export interface ProgramTerapi {
 
 ### **✅ Test Cases yang Berhasil:**
 1. **Add Program BT/OT/TW/SI**: Program tersimpan tanpa sub-program ✅
-2. **Add Program CBT/NEUROSENSO/HIDROTERAPI**: Program tersimpan sebagai program utama ✅
+2. **Add Program CBT/NEUROSENSO/HIDROTERAPI/FISIOTERAPI**: Program tersimpan sebagai program utama ✅
 3. **Edit Program**: Program dapat diedit tanpa sub-program ✅
 4. **Validation**: Tidak ada error validasi sub-program ✅
 5. **Card Display**: Program ditampilkan sebagai program utama ✅
-6. **Dropdown Options**: Semua 7 program tersedia di dropdown ✅
+6. **Dropdown Options**: Semua 8 program tersedia di dropdown ✅
 
 ## 📚 **File yang Diperbaiki**
 
@@ -247,7 +248,7 @@ export interface ProgramTerapi {
 
 ## 🎉 **Kesimpulan**
 
-Berhasil menghapus konsep "sub-program" dan menjadikan CBT, Neurosenso, Hidroterapi sebagai program utama yang setara dengan program terapi lainnya.
+Berhasil menghapus konsep "sub-program" dan menjadikan CBT, Neurosenso, Hidroterapi, dan Fisioterapi sebagai program utama yang setara dengan program terapi lainnya.
 
 ### **✅ Status: PRODUCTION READY**
 - Implementasi lengkap ✅
@@ -256,4 +257,4 @@ Berhasil menghapus konsep "sub-program" dan menjadikan CBT, Neurosenso, Hidroter
 - Backend integration working ✅
 - Testing completed ✅
 
-**Perubahan telah selesai** - CBT, Neurosenso, Hidroterapi sekarang menjadi program utama yang setara dengan OT, BT, SI, TW, dan CBT. 
+**Perubahan telah selesai** - CBT, Neurosenso, Hidroterapi, dan Fisioterapi sekarang menjadi program utama yang setara dengan OT, BT, SI, TW, dan CBT. 

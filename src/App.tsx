@@ -21,6 +21,7 @@ import ChatbotBubble from './components/ChatbotBubble';
 import NotFoundPage from './components/NotFoundPage';
 import ServerErrorPage from './components/ServerErrorPage';
 import SettingAplikasiPage from './components/Settings/SettingAplikasiPage';
+import FaviconManager from './components/UI/FaviconManager';
 import { AppConfigProvider } from './contexts/AppConfigContext';
 import { DashboardCacheProvider } from './contexts/DashboardCacheContext';
 
@@ -145,11 +146,13 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(open => !open)} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title={getPageTitle()} subtitle={getPageSubtitle()} onToggleSidebar={() => setSidebarOpen(open => !open)} />
-        <main className="flex-1 overflow-y-auto p-6">
+    <>
+      <FaviconManager />
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen(open => !open)} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header title={getPageTitle()} subtitle={getPageSubtitle()} onToggleSidebar={() => setSidebarOpen(open => !open)} />
+          <main className="flex-1 overflow-y-auto p-6">
           <Routes>
             <Route path="/dashboard" element={
               <ProtectedRoute requiredRole="ADMIN-OR-HIGHER">
@@ -187,6 +190,7 @@ const Dashboard: React.FC = () => {
         </main>
       </div>
     </div>
+    </>
   );
 };
 
