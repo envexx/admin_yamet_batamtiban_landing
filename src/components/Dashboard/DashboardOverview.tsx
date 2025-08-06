@@ -3,6 +3,8 @@ import { DashboardStats } from '../../types';
 import StatsCard from './StatsCard';
 import NormalizedDataCard from './NormalizedDataCard';
 import MinimalCacheStatus from './MinimalCacheStatus';
+import ConversionStatsCard from './ConversionStatsCard';
+import ErrorBoundary from '../UI/ErrorBoundary';
 import { Users, UserCheck, UserPlus, TrendingUp, BarChart2, LogOut, RefreshCw, AlertCircle, Info } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { useAuth } from '../../contexts/AuthContext';
@@ -326,6 +328,15 @@ const DashboardOverview: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Conversion Stats */}
+      {stats.conversion_data && (
+        <div className="mb-8">
+          <ErrorBoundary>
+            <ConversionStatsCard conversionData={stats.conversion_data} />
+          </ErrorBoundary>
+        </div>
+      )}
 
       {/* Normalized Data Section */}
       {canViewNormalizedData && stats.normalized_data && (

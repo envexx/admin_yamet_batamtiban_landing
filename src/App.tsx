@@ -22,29 +22,13 @@ import NotFoundPage from './components/NotFoundPage';
 import ServerErrorPage from './components/ServerErrorPage';
 import SettingAplikasiPage from './components/Settings/SettingAplikasiPage';
 import FaviconManager from './components/UI/FaviconManager';
+import ConversionPage from './components/Conversion/ConversionPage';
+import NotifikasiPage from './components/Notifikasi/NotifikasiPage';
+import ErrorBoundary from './components/UI/ErrorBoundary';
 import { AppConfigProvider } from './contexts/AppConfigContext';
 import { DashboardCacheProvider } from './contexts/DashboardCacheContext';
 
-// ErrorBoundary untuk menangkap error 500
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true };
-  }
-  componentDidCatch(error: any, errorInfo: any) {
-    // Bisa log error ke server di sini
-    // console.error(error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      return <ServerErrorPage onRetry={() => window.location.reload()} />;
-    }
-    return this.props.children;
-  }
-}
+
 
 const Dashboard: React.FC = () => {
   const location = useLocation();
@@ -63,6 +47,8 @@ const Dashboard: React.FC = () => {
     if (path === '/profile') return 'profile';
     if (path === '/terapis') return 'terapis';
     if (path === '/setting-aplikasi') return 'setting-aplikasi';
+    if (path === '/conversion') return 'conversion';
+    if (path === '/notifikasi') return 'notifikasi';
     return 'dashboard';
   };
 
@@ -94,6 +80,12 @@ const Dashboard: React.FC = () => {
       case 'setting-aplikasi':
         navigate('/setting-aplikasi');
         break;
+      case 'conversion':
+        navigate('/conversion');
+        break;
+      case 'notifikasi':
+        navigate('/notifikasi');
+        break;
       default:
         navigate('/dashboard');
     }
@@ -117,6 +109,10 @@ const Dashboard: React.FC = () => {
         return 'Manajemen Terapis';
       case 'setting-aplikasi':
         return 'Pengaturan Aplikasi';
+      case 'conversion':
+        return 'Data Conversion';
+      case 'notifikasi':
+        return 'Data Notifikasi';
       default:
         return 'Dashboard';
     }
@@ -140,6 +136,10 @@ const Dashboard: React.FC = () => {
         return 'Kelola data terapis dan informasi jadwal';
       case 'setting-aplikasi':
         return 'Kelola pengaturan aplikasi dan konfigurasi sistem';
+      case 'conversion':
+        return 'Kelola data conversion rate untuk mengukur efektivitas program YAMET';
+      case 'notifikasi':
+        return 'Kelola notifikasi sistem untuk mengirim pemberitahuan kepada user';
       default:
         return '';
     }
@@ -156,35 +156,83 @@ const Dashboard: React.FC = () => {
           <Routes>
             <Route path="/dashboard" element={
               <ProtectedRoute requiredRole="ADMIN-OR-HIGHER">
-                <CleanDashboardOverview />
+                <ErrorBoundary>
+                  <CleanDashboardOverview />
+                </ErrorBoundary>
               </ProtectedRoute>
             } />
-            <Route path="/anak" element={<AnakList />} />
-            <Route path="/anak/tambah" element={<AnakAddForm />} />
-            <Route path="/anak/:id" element={<AnakDetail />} />
-            <Route path="/anak/edit/:id" element={<AnakEditForm />} />
+            <Route path="/anak" element={
+              <ErrorBoundary>
+                <AnakList />
+              </ErrorBoundary>
+            } />
+            <Route path="/anak/tambah" element={
+              <ErrorBoundary>
+                <AnakAddForm />
+              </ErrorBoundary>
+            } />
+            <Route path="/anak/:id" element={
+              <ErrorBoundary>
+                <AnakDetail />
+              </ErrorBoundary>
+            } />
+            <Route path="/anak/edit/:id" element={
+              <ErrorBoundary>
+                <AnakEditForm />
+              </ErrorBoundary>
+            } />
             <Route path="/users" element={
               <ProtectedRoute requiredRole="SUPERADMIN">
-                <UserManagement />
+                <ErrorBoundary>
+                  <UserManagement />
+                </ErrorBoundary>
               </ProtectedRoute>
             } />
-            <Route path="/profile" element={<ProfileSettings />} />
+            <Route path="/profile" element={
+              <ErrorBoundary>
+                <ProfileSettings />
+              </ErrorBoundary>
+            } />
             <Route path="/assessment" element={
               <ProtectedRoute requiredRole="ADMIN-OR-HIGHER">
-                <AssessmentList />
+                <ErrorBoundary>
+                  <AssessmentList />
+                </ErrorBoundary>
               </ProtectedRoute>
             } />
             <Route path="/program-terapi" element={
               <ProtectedRoute requiredRole="ADMIN-OR-HIGHER">
-                <ProgramTerapiList />
+                <ErrorBoundary>
+                  <ProgramTerapiList />
+                </ErrorBoundary>
               </ProtectedRoute>
             } />
             <Route path="/terapis" element={
               <ProtectedRoute requiredRole="MANAGER-OR-SUPERADMIN">
-                <TerapisList />
+                <ErrorBoundary>
+                  <TerapisList />
+                </ErrorBoundary>
               </ProtectedRoute>
             } />
-            <Route path="/setting-aplikasi" element={<SettingAplikasiPage />} />
+            <Route path="/conversion" element={
+              <ProtectedRoute requiredRole="ADMIN-OR-HIGHER">
+                <ErrorBoundary>
+                  <ConversionPage />
+                </ErrorBoundary>
+              </ProtectedRoute>
+            } />
+            <Route path="/notifikasi" element={
+              <ProtectedRoute requiredRole="SUPERADMIN">
+                <ErrorBoundary>
+                  <NotifikasiPage />
+                </ErrorBoundary>
+              </ProtectedRoute>
+            } />
+            <Route path="/setting-aplikasi" element={
+              <ErrorBoundary>
+                <SettingAplikasiPage />
+              </ErrorBoundary>
+            } />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
@@ -207,20 +255,19 @@ const AppContent: React.FC = () => {
   }
 
   if (!user) {
-    if (location.pathname === '/register') {
-      return <RegisterForm />;
-    }
-    // Jika user tidak login dan bukan di /register, tampilkan NotFoundPage
-    if (location.pathname !== '/login') {
-      return <NotFoundPage />;
-    }
-    return <LoginForm />;
+    // Redirect ke login jika tidak ada user
+    return <Navigate to="/login" replace />;
   }
 
-  return <>
-    <Dashboard />
-    <ChatbotBubble />
-  </>;
+  // Jika user sudah login, tampilkan dashboard
+  return (
+    <>
+      <Dashboard />
+      <ErrorBoundary>
+        <ChatbotBubble />
+      </ErrorBoundary>
+    </>
+  );
 };
 
 function App() {
@@ -231,11 +278,10 @@ function App() {
           <DashboardCacheProvider>
             <ErrorBoundary>
               <Routes>
+                <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
-                {/* Route root: redirect tergantung status login */}
-                <Route path="/" element={<RootRedirect />} />
-                <Route path="*" element={<AppContent />} />
                 <Route path="/404" element={<NotFoundPage />} />
+                <Route path="*" element={<AppContent />} />
               </Routes>
             </ErrorBoundary>
           </DashboardCacheProvider>
@@ -245,12 +291,6 @@ function App() {
   );
 }
 
-// Komponen untuk redirect root sesuai status login
-const RootRedirect: React.FC = () => {
-  const { user, isLoading } = useAuth();
-  if (isLoading) return null;
-  if (user) return <Navigate to="/dashboard" replace />;
-  return <Navigate to="/login" replace />;
-};
+
 
 export default App;

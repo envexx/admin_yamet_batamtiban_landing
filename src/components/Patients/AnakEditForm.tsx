@@ -766,7 +766,7 @@ const AnakEditForm: React.FC = () => {
           nomor_anak: fallbackNumber
         }));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error generating number:', err);
       // Jika gagal, set default format
       const currentYear = new Date().getFullYear();
@@ -851,8 +851,9 @@ const AnakEditForm: React.FC = () => {
       try {
         await anakAPI.uploadLampiran(anakId, formData);
         showAlert({ type: 'success', title: 'Lampiran', message: `File ${file.name} berhasil diupload!` });
-      } catch (err: any) {
-        showAlert({ type: 'error', title: 'Lampiran', message: `Gagal upload file ${file.name}` });
+      } catch (err: unknown) {
+        const errorMessage = (err as Error)?.message || `Gagal upload file ${file.name}`;
+        showAlert({ type: 'error', title: 'Lampiran', message: errorMessage });
       }
     }
   };
@@ -979,23 +980,24 @@ const AnakEditForm: React.FC = () => {
           try {
             await anakAPI.uploadLampiran(anakData.id, formData);
             showAlert({ type: 'success', title: 'Lampiran', message: `File ${file.name} berhasil diupload!` });
-          } catch (err: any) {
-            showAlert({ type: 'error', title: 'Lampiran', message: `Gagal upload file ${file.name}` });
+          } catch (err: unknown) {
+            const errorMessage = (err as Error)?.message || `Gagal upload file ${file.name}`;
+            showAlert({ type: 'error', title: 'Lampiran', message: errorMessage });
           }
         }
       }
       navigate('/anak');
       showAlert({ type: 'success', title: 'Berhasil', message: 'Data berhasil diupdate!' });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error detail:', err);
-      console.error('Error response:', err.response?.data);
+      console.error('Error response:', (err as any)?.response?.data);
       let errorMessage = 'Gagal menyimpan data';
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (err.message) {
-        errorMessage = err.message;
+      if ((err as any)?.response?.data?.message) {
+        errorMessage = (err as any).response.data.message;
+      } else if ((err as any)?.response?.data?.error) {
+        errorMessage = (err as any).response.data.error;
+      } else if ((err as Error)?.message) {
+        errorMessage = (err as Error).message;
       }
       setError(errorMessage);
       showAlert({
@@ -1412,8 +1414,9 @@ const AnakEditForm: React.FC = () => {
             showAlert({ type: 'error', title: 'Error', message: 'Data anak tidak ditemukan' });
           }
         })
-        .catch((err: any) => {
-          showAlert({ type: 'error', title: 'Error', message: 'Gagal mengambil data anak' });
+        .catch((err: unknown) => {
+          const errorMessage = (err as Error)?.message || 'Gagal mengambil data anak';
+          showAlert({ type: 'error', title: 'Error', message: errorMessage });
         });
     }
   }, [id]);

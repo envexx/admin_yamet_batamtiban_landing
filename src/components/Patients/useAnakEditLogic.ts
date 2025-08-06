@@ -841,16 +841,19 @@ export const useAnakEditLogic = () => {
       // Upload lampiran jika ada file baru
       for (const [key, file] of Object.entries(lampiranFiles)) {
         if (file) {
-          await anakAPI.uploadLampiran(anakData.id, key, file);
+          const formData = new FormData();
+          formData.append(key, file);
+          await anakAPI.uploadLampiran(anakData.id, formData);
         }
       }
       
       showAlert('success', 'Data anak berhasil diperbarui');
       navigate('/patients');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating anak:', error);
-      setError(error.response?.data?.message || 'Terjadi kesalahan saat memperbarui data anak');
-      showAlert('error', error.response?.data?.message || 'Terjadi kesalahan saat memperbarui data anak');
+      const errorMessage = (error as any)?.response?.data?.message || 'Terjadi kesalahan saat memperbarui data anak';
+      setError(errorMessage);
+      showAlert('error', errorMessage);
     } finally {
       setLoading(false);
     }

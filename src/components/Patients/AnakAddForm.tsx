@@ -397,6 +397,7 @@ const defaultAnakDetail: AnakDetail = {
     perilaku_bertemu_orang_baru: '',
     perilaku_bertemu_teman_sebaya: '',
     perilaku_bertemu_orang_lebih_tua: '',
+    perilaku_bertemu_orang_lebih_muda: '',
     bermain_dengan_banyak_anak: '',
     keterangan_lainnya: '',
   },
@@ -571,8 +572,8 @@ function cleanDataForAPI(data: typeof defaultAnakDetail) {
       pernikahan_ke: data.ayah.pernikahan_ke === undefined || data.ayah.pernikahan_ke === null ? 0 : toNumber(data.ayah.pernikahan_ke, 0),
       usia_saat_menikah: data.ayah.usia_saat_menikah === undefined || data.ayah.usia_saat_menikah === null ? 0 : toNumber(data.ayah.usia_saat_menikah, 0),
       usia: data.ayah.usia === undefined || data.ayah.usia === null ? 0 : toNumber(data.ayah.usia, 0),
-      tahun_meninggal: data.ayah.tahun_meninggal === undefined || data.ayah.tahun_meninggal === null ? undefined : toNumber(data.ayah.tahun_meninggal, undefined),
-      usia_saat_meninggal: data.ayah.usia_saat_meninggal === undefined || data.ayah.usia_saat_meninggal === null ? undefined : toNumber(data.ayah.usia_saat_meninggal, undefined),
+      tahun_meninggal: data.ayah.tahun_meninggal === undefined || data.ayah.tahun_meninggal === null ? null : toNumber(data.ayah.tahun_meninggal, null),
+      usia_saat_meninggal: data.ayah.usia_saat_meninggal === undefined || data.ayah.usia_saat_meninggal === null ? null : toNumber(data.ayah.usia_saat_meninggal, null),
     },
     ibu: {
       ...cleanIbu,
@@ -1188,19 +1189,19 @@ const AnakAddForm: React.FC = () => {
       
       navigate('/anak');
       showAlert({ type: 'success', title: 'Berhasil', message: 'Data berhasil ditambahkan!' });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error detail:', err);
-      console.error('Error response:', err.response?.data);
+      console.error('Error response:', (err as any)?.response?.data);
 
       // Tampilkan error yang lebih detail
       let errorMessage = 'Gagal menyimpan data';
 
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (err.message) {
-        errorMessage = err.message;
+      if ((err as any)?.response?.data?.message) {
+        errorMessage = (err as any).response.data.message;
+      } else if ((err as any)?.response?.data?.error) {
+        errorMessage = (err as any).response.data.error;
+      } else if ((err as Error)?.message) {
+        errorMessage = (err as Error).message;
       }
 
       setError(errorMessage);
@@ -1358,6 +1359,7 @@ const AnakAddForm: React.FC = () => {
   const [perilakuOrangBaruInput, setPerilakuOrangBaruInput] = useState('');
   const [perilakuTemanSebayaInput, setPerilakuTemanSebayaInput] = useState('');
   const [perilakuOrangLebihTuaInput, setPerilakuOrangLebihTuaInput] = useState('');
+  const [perilakuOrangLebihMudaInput, setPerilakuOrangLebihMudaInput] = useState('');
   const [bermainDenganBanyakAnakInput, setBermainDenganBanyakAnakInput] = useState('');
   const [perkembanganSosialKeteranganInput, setPerkembanganSosialKeteranganInput] = useState('');
 
@@ -1556,7 +1558,7 @@ const AnakAddForm: React.FC = () => {
     }
   };
   const addPerilakuOrangLebihMudaTag = () => {
-    const val = perilakuOrangLebihTuaInput.trim();
+    const val = perilakuOrangLebihMudaInput.trim();
     if (val && !perilakuOrangLebihMudaTags.some(t => t.text === val)) {
       const newTags = [...perilakuOrangLebihMudaTags, { id: String(Date.now()), text: val }];
       setPerilakuOrangLebihMudaTags(newTags);

@@ -65,8 +65,9 @@ const AssessmentList: React.FC = () => {
       } else {
         setError(response.message || 'Gagal memuat data assessment');
       }
-    } catch (err: any) {
-      setError(err.message || 'Gagal memuat data assessment');
+    } catch (err: unknown) {
+      const errorMessage = (err as Error)?.message || 'Gagal memuat data assessment';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -121,8 +122,9 @@ const AssessmentList: React.FC = () => {
         fetchAssessments(); // Refresh the list
         showAlert({ type: 'success', title: 'Berhasil', message: 'Assessment berhasil diperbarui' });
       }
-    } catch (err: any) {
-      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal memperbarui assessment' });
+    } catch (err: unknown) {
+      const errorMessage = (err as Error)?.message || 'Gagal memperbarui assessment';
+      showAlert({ type: 'error', title: 'Gagal', message: errorMessage });
     }
   };
 
@@ -160,8 +162,9 @@ const AssessmentList: React.FC = () => {
         fetchAssessments(); // Refresh the list
         showAlert({ type: 'success', title: 'Berhasil', message: 'Assessment berhasil dibuat' });
       }
-    } catch (err: any) {
-      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal membuat assessment' });
+    } catch (err: unknown) {
+      const errorMessage = (err as Error)?.message || 'Gagal membuat assessment';
+      showAlert({ type: 'error', title: 'Gagal', message: errorMessage });
     }
   };
 
@@ -191,8 +194,9 @@ const AssessmentList: React.FC = () => {
         fetchAssessments(); // Refresh the list
         showAlert({ type: 'success', title: 'Berhasil', message: 'Assessment berhasil dihapus' });
       }
-    } catch (err: any) {
-      showAlert({ type: 'error', title: 'Gagal', message: err.message || 'Gagal menghapus assessment' });
+    } catch (err: unknown) {
+      const errorMessage = (err as Error)?.message || 'Gagal menghapus assessment';
+      showAlert({ type: 'error', title: 'Gagal', message: errorMessage });
     } finally {
       setShowDeleteConfirm(false);
       setDeleteData(null);

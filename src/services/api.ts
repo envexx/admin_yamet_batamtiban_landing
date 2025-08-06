@@ -30,7 +30,13 @@ import type {
   CreateProgramTerapiData,
   UpdateProgramTerapiData,
   AdminStats,
-  AdminStatsFilters
+  AdminStatsFilters,
+  Conversion,
+  ConversionForm,
+  ConversionResponse,
+  Notifikasi,
+  NotifikasiForm,
+  NotifikasiResponse
 } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -507,6 +513,436 @@ export const programTerapiAPI = {
   delete: async (anakId: number, programId: number): Promise<{ status: string; message: string }> => {
     const response = await api.delete(`/anak/${anakId}/program-terapi`, { params: { programId } });
     return response.data;
+  },
+};
+
+// Conversion API
+export const conversionAPI = {
+  // Get all conversions with pagination and filters
+  getAll: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    bulan?: string;
+    tahun?: number;
+  } = {}): Promise<ApiResponse<ConversionResponse>> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.bulan) queryParams.append('bulan', params.bulan);
+    if (params.tahun) queryParams.append('tahun', params.tahun.toString());
+
+    const url = `/conversion?${queryParams}`;
+    
+    try {
+      const response = await api.get(url);
+      console.log('[DEBUG] Conversion API Response:', response.data);
+      
+      // Handle the actual response structure from backend
+      if (response.data && response.data.data !== undefined) {
+        return {
+          success: true,
+          data: {
+            conversions: response.data.data || [],
+            pagination: response.data.pagination || {
+              current_page: 1,
+              total_pages: 0,
+              total_records: 0,
+              has_next: false,
+              has_prev: false
+            }
+          },
+          message: response.data.message || 'Data berhasil diambil'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal mengambil data'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Conversion API Error:', error);
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat mengambil data conversion');
+    }
+  },
+
+  // Create new conversion
+  create: async (data: ConversionForm): Promise<ApiResponse<Conversion>> => {
+    try {
+      const response = await api.post('/conversion', data);
+      console.log('[DEBUG] Create Conversion Response:', response.data);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: response.data.data,
+          message: response.data.message || 'Data conversion berhasil dibuat'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal membuat data conversion'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Create Conversion Error:', error);
+      console.error('[DEBUG] Error Response Data:', error.response?.data);
+      console.error('[DEBUG] Error Response Status:', error.response?.status);
+      console.error('[DEBUG] Error Response Headers:', error.response?.headers);
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat membuat data conversion');
+    }
+  },
+
+  // Update conversion
+  update: async (id: number, data: ConversionForm): Promise<ApiResponse<Conversion>> => {
+    try {
+      const response = await api.put(`/conversion/${id}`, data);
+      console.log('[DEBUG] Update Conversion Response:', response.data);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: response.data.data,
+          message: response.data.message || 'Data conversion berhasil diupdate'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal mengupdate data conversion'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Update Conversion Error:', error);
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat mengupdate data conversion');
+    }
+  },
+
+  // Delete conversion
+  delete: async (id: number): Promise<ApiResponse> => {
+    try {
+      const response = await api.delete(`/conversion/${id}`);
+      console.log('[DEBUG] Delete Conversion Response:', response.data);
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          message: response.data.message || 'Data conversion berhasil dihapus'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal menghapus data conversion'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Delete Conversion Error:', error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 403) {
+        throw new Error('Anda tidak memiliki izin untuk menghapus data conversion ini');
+      } else if (error.response?.status === 404) {
+        throw new Error('Data conversion tidak ditemukan');
+      } else if (error.response?.status === 401) {
+        throw new Error('Sesi Anda telah berakhir. Silakan login kembali');
+      } else {
+        throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat menghapus data conversion');
+      }
+    }
+  },
+};
+
+// Notifikasi API
+export const notifikasiAPI = {
+  // Get all notifications (Superadmin only)
+  getAll: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    jenis_pemberitahuan?: string;
+    tujuan?: string;
+    is_read?: boolean;
+  } = {}): Promise<ApiResponse<NotifikasiResponse>> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.jenis_pemberitahuan) queryParams.append('jenis_pemberitahuan', params.jenis_pemberitahuan);
+    if (params.tujuan) queryParams.append('tujuan', params.tujuan);
+    if (params.is_read !== undefined) queryParams.append('is_read', params.is_read.toString());
+
+    try {
+      const response = await api.get(`/notifikasi?${queryParams}`);
+      console.log('[DEBUG] Notifikasi API Response:', response.data);
+      
+      // Handle the actual response structure from backend
+      if (response.data && response.data.data !== undefined) {
+        return {
+          success: true,
+          data: {
+            notifikasis: response.data.data || [],
+            pagination: response.data.pagination || {
+              current_page: 1,
+              total_pages: 0,
+              total_records: 0,
+              has_next: false,
+              has_prev: false
+            }
+          },
+          message: response.data.message || 'Data berhasil diambil'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal mengambil data'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Notifikasi API Error:', error);
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat mengambil data notifikasi');
+    }
+  },
+
+  // Create new notification (Superadmin only)
+  create: async (data: NotifikasiForm): Promise<ApiResponse<Notifikasi>> => {
+    try {
+      const response = await api.post('/notifikasi', data);
+      console.log('[DEBUG] Create Notifikasi Response:', response.data);
+      
+      // Backend returns { data: {...}, message: "..." } without success field
+      if (response.data && response.data.data) {
+        return {
+          success: true,
+          data: response.data.data,
+          message: response.data.message || 'Notifikasi berhasil dibuat'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal membuat notifikasi'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Create Notifikasi Error:', error);
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat membuat notifikasi');
+    }
+  },
+
+  // Update notification (Superadmin only)
+  update: async (id: number, data: NotifikasiForm): Promise<ApiResponse<Notifikasi>> => {
+    try {
+      // Try path parameter first
+      const response = await api.put(`/notifikasi/${id}`, data);
+      console.log('[DEBUG] Update Notifikasi Response:', response.data);
+      
+      // Backend returns { data: {...}, message: "..." } without success field
+      if (response.data && response.data.data) {
+        return {
+          success: true,
+          data: response.data.data,
+          message: response.data.message || 'Notifikasi berhasil diupdate'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal mengupdate notifikasi'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Update Notifikasi Error:', error);
+      
+      // If path parameter fails, try query parameter
+      if (error.response?.status === 404 || error.response?.status === 405) {
+        try {
+          console.log('[DEBUG] Trying query parameter update...');
+          const altResponse = await api.put(`/notifikasi?id=${id}`, data);
+          console.log('[DEBUG] Query Parameter Update Response:', altResponse.data);
+          
+          if (altResponse.data && altResponse.data.data) {
+            return {
+              success: true,
+              data: altResponse.data.data,
+              message: altResponse.data.message || 'Notifikasi berhasil diupdate'
+            };
+          } else {
+            return {
+              success: false,
+              message: altResponse.data.message || 'Gagal mengupdate notifikasi'
+            };
+          }
+        } catch (altError: any) {
+          console.error('[DEBUG] Query Parameter Update Error:', altError);
+          throw new Error(altError.response?.data?.message || 'Terjadi kesalahan saat mengupdate notifikasi');
+        }
+      }
+      
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat mengupdate notifikasi');
+    }
+  },
+
+  // Delete notification (Superadmin only)
+  delete: async (id: number): Promise<ApiResponse> => {
+    try {
+      // Try DELETE method with path parameter first
+      const response = await api.delete(`/notifikasi/${id}`);
+      console.log('[DEBUG] Delete Notifikasi Response:', response.data);
+      
+      // Backend returns { message: "..." } without success field
+      if (response.data && response.data.message) {
+        return {
+          success: true,
+          message: response.data.message || 'Notifikasi berhasil dihapus'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal menghapus notifikasi'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Delete Notifikasi Error:', error);
+      
+      // If path parameter fails, try query parameter
+      if (error.response?.status === 404 || error.response?.status === 405) {
+        try {
+          console.log('[DEBUG] Trying query parameter delete...');
+          const altResponse = await api.delete(`/notifikasi?id=${id}`);
+          console.log('[DEBUG] Query Parameter Delete Response:', altResponse.data);
+          
+          if (altResponse.data && altResponse.data.message) {
+            return {
+              success: true,
+              message: altResponse.data.message || 'Notifikasi berhasil dihapus'
+            };
+          } else {
+            return {
+              success: false,
+              message: altResponse.data.message || 'Gagal menghapus notifikasi'
+            };
+          }
+        } catch (altError: any) {
+          console.error('[DEBUG] Query Parameter Delete Error:', altError);
+          
+          // If query parameter also fails, try POST with _method=DELETE
+          try {
+            console.log('[DEBUG] Trying POST with _method=DELETE...');
+            const postResponse = await api.post(`/notifikasi`, { 
+              _method: 'DELETE',
+              id: id
+            });
+            console.log('[DEBUG] POST Delete Response:', postResponse.data);
+            
+            if (postResponse.data && postResponse.data.message) {
+              return {
+                success: true,
+                message: postResponse.data.message || 'Notifikasi berhasil dihapus'
+              };
+            } else {
+              return {
+                success: false,
+                message: postResponse.data.message || 'Gagal menghapus notifikasi'
+              };
+            }
+          } catch (postError: any) {
+            console.error('[DEBUG] POST Delete Error:', postError);
+            throw new Error(postError.response?.data?.message || 'Terjadi kesalahan saat menghapus notifikasi');
+          }
+        }
+      }
+      
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat menghapus notifikasi');
+    }
+  },
+
+  // Get user notifications (all authenticated users)
+  getUserNotifications: async (params: {
+    page?: number;
+    limit?: number;
+  } = {}): Promise<ApiResponse<NotifikasiResponse>> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+
+    try {
+      const response = await api.get(`/notifikasi/user?${queryParams}`);
+      console.log('[DEBUG] User Notifications Response:', response.data);
+      
+      // Handle the actual response structure from backend
+      if (response.data && response.data.data !== undefined) {
+        return {
+          success: true,
+          data: {
+            notifikasis: response.data.data || [],
+            pagination: response.data.pagination || {
+              current_page: 1,
+              total_pages: 0,
+              total_records: 0,
+              has_next: false,
+              has_prev: false
+            }
+          },
+          message: response.data.message || 'Data berhasil diambil'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal mengambil data'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] User Notifications Error:', error);
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat mengambil notifikasi user');
+    }
+  },
+
+  // Mark notification as read (all authenticated users)
+  markAsRead: async (id: number): Promise<ApiResponse> => {
+    try {
+      // Try path parameter first
+      const response = await api.put(`/notifikasi/user/${id}`, { is_read: true });
+      console.log('[DEBUG] Mark As Read Response:', response.data);
+      
+      // Backend returns { message: "..." } without success field
+      if (response.data && response.data.message) {
+        return {
+          success: true,
+          message: response.data.message || 'Notifikasi berhasil ditandai sebagai dibaca'
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'Gagal menandai notifikasi sebagai dibaca'
+        };
+      }
+    } catch (error: any) {
+      console.error('[DEBUG] Mark As Read Error:', error);
+      
+      // If path parameter fails, try query parameter
+      if (error.response?.status === 404 || error.response?.status === 405) {
+        try {
+          console.log('[DEBUG] Trying query parameter mark as read...');
+          const altResponse = await api.put(`/notifikasi/user?id=${id}`, { is_read: true });
+          console.log('[DEBUG] Query Parameter Mark As Read Response:', altResponse.data);
+          
+          if (altResponse.data && altResponse.data.message) {
+            return {
+              success: true,
+              message: altResponse.data.message || 'Notifikasi berhasil ditandai sebagai dibaca'
+            };
+          } else {
+            return {
+              success: false,
+              message: altResponse.data.message || 'Gagal menandai notifikasi sebagai dibaca'
+            };
+          }
+        } catch (altError: any) {
+          console.error('[DEBUG] Query Parameter Mark As Read Error:', altError);
+          throw new Error(altError.response?.data?.message || 'Terjadi kesalahan saat menandai notifikasi');
+        }
+      }
+      
+      throw new Error(error.response?.data?.message || 'Terjadi kesalahan saat menandai notifikasi');
+    }
   },
 };
 

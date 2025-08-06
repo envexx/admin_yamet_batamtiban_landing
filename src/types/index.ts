@@ -1,6 +1,7 @@
 // API Response Types
 export interface ApiResponse<T = any> {
-  status: 'success' | 'error';
+  success?: boolean;
+  status?: 'success' | 'error';
   message: string;
   data?: T;
   errors?: { path?: string[]; message: string }[];
@@ -999,4 +1000,81 @@ export interface AdminInputStats {
 
 export interface AdminStatsFilters {
   period?: 'all' | '1month' | '4month' | '6month' | '1year';
+}
+
+// Conversion Types
+export interface Conversion {
+  id: number;
+  jumlah_anak_keluar: number;
+  jumlah_leads: number;
+  jumlah_conversi: number;
+  bulan: string;
+  tahun: number;
+  created_by: number;
+  updated_by: number | null;
+  created_at: string;
+  updated_at: string;
+  user_created?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  user_updated?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export interface ConversionForm {
+  jumlah_anak_keluar: number;
+  jumlah_leads: number;
+  jumlah_conversi: number;
+  bulan: string;
+  tahun: number;
+}
+
+export interface ConversionResponse {
+  conversions: Conversion[];
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_records: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+}
+
+// Notifikasi Types
+export interface Notifikasi {
+  id: number;
+  jenis_pemberitahuan: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
+  isi_notifikasi: string;
+  tujuan: string;
+  is_read: boolean;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+  user_created?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export interface NotifikasiForm {
+  jenis_pemberitahuan: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
+  isi_notifikasi: string;
+  tujuan: string;
+}
+
+export interface NotifikasiResponse {
+  notifikasis: Notifikasi[];
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_records: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
 }
