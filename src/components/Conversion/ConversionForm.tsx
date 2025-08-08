@@ -217,7 +217,6 @@ const ConversionForm: React.FC<ConversionFormProps> = ({
           <input
             type="number"
             min="0"
-            max={formData.jumlah_leads}
             value={formData.jumlah_conversi}
             onChange={(e) => handleInputChange('jumlah_conversi', parseInt(e.target.value) || 0)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
